@@ -15,3 +15,4 @@ This is a web-based game.
 
 - The user is not a software engineer. Explain things in simple, plain terms — avoid unexplained jargon. When something technical is unavoidable, briefly say what it means.
 - Commit to git often (small, frequent commits), with clear plain-language commit messages.
+- Always push directly to the `main` branch (no separate feature branches/PRs) — GitHub Pages serves the live game straight from this repo, so `main` should always be pushed to.
