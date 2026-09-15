@@ -208,7 +208,7 @@
       {
         trigger: { x: 680, y: 0, w: 80, h: 70 },
         target: "house",
-        spawn: { x: 720, y: 460, facing: "up" },
+        spawn: { x: 720, y: 495, facing: "up" },
       },
     ],
     label: "Front Yard",
