@@ -189,6 +189,12 @@
   scenes.frontyard = {
     bg: "#7ec850",
     sky: true,
+    bands: [
+      { y: 160, h: 40, color: "#c9c9c9" },
+      { y: 200, h: 220, color: "#454545" },
+      { y: 420, h: 40, color: "#c9c9c9" },
+    ],
+    road: { y: 200, h: 220 },
     walls: [
       { x: 0, y: 0, w: 680, h: 40 },
       { x: 760, y: 0, w: 200, h: 40 },
@@ -196,13 +202,19 @@
       { x: 0, y: 0, w: 20, h: 600 },
       { x: 940, y: 0, w: 20, h: 600 },
     ],
-    furniture: [],
+    furniture: [
+      { x: 40, y: 460, w: 200, h: 100, type: "neighborhouse", color: "#7d9fc9" },
+      { x: 720, y: 460, w: 200, h: 100, type: "neighborhouse", color: "#d9a865" },
+    ],
     decor: [
       { type: "tree", x: 90, y: 90 },
       { type: "tree", x: 870, y: 90 },
-      { type: "flowerbed", x: 150, y: 480, w: 120, h: 30 },
-      { type: "flowerbed", x: 690, y: 480, w: 120, h: 30 },
-      { type: "mailbox", x: 480, y: 500 },
+      { type: "flowerbed", x: 150, y: 115, w: 120, h: 24 },
+      { type: "flowerbed", x: 690, y: 115, w: 120, h: 24 },
+      { type: "mailbox", x: 500, y: 145 },
+      { type: "streetlamp", x: 300, y: 190 },
+      { type: "streetlamp", x: 660, y: 190 },
+      { type: "tree", x: 480, y: 505 },
     ],
     doors: [
       {
@@ -211,7 +223,7 @@
         spawn: { x: 720, y: 495, facing: "up" },
       },
     ],
-    label: "Front Yard",
+    label: "Oakwood Street",
   };
 
   scenes.backyard = {
@@ -445,6 +457,32 @@
     ctx.fillRect(x - 12, y - 18, 24, 20);
   }
 
+  function drawStreetlamp(x, y) {
+    ctx.fillStyle = "#3a3a3a";
+    ctx.fillRect(x - 3, y, 6, 60);
+    ctx.fillStyle = "#ffe98a";
+    ctx.beginPath();
+    ctx.arc(x, y - 6, 9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawNeighborHouse(f) {
+    ctx.fillStyle = f.color;
+    ctx.fillRect(f.x, f.y + f.h * 0.35, f.w, f.h * 0.65);
+    ctx.fillStyle = "#6b4a36";
+    ctx.beginPath();
+    ctx.moveTo(f.x - 10, f.y + f.h * 0.35);
+    ctx.lineTo(f.x + f.w / 2, f.y - f.h * 0.25);
+    ctx.lineTo(f.x + f.w + 10, f.y + f.h * 0.35);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#3a2a1f";
+    ctx.fillRect(f.x + f.w / 2 - 16, f.y + f.h - 34, 32, 34);
+    ctx.fillStyle = "#bfe3ff";
+    ctx.fillRect(f.x + 16, f.y + f.h * 0.55, 26, 26);
+    ctx.fillRect(f.x + f.w - 42, f.y + f.h * 0.55, 26, 26);
+  }
+
   function drawBed(f) {
     ctx.fillStyle = "#8a5a34";
     ctx.fillRect(f.x, f.y, f.w, f.h);
@@ -565,12 +603,31 @@
       ctx.fillRect(40, 40, 420, 520);
     }
 
+    if (scene.bands) {
+      scene.bands.forEach(function (b) {
+        ctx.fillStyle = b.color;
+        ctx.fillRect(0, b.y, WORLD_W, b.h);
+      });
+    }
+
+    if (scene.road) {
+      ctx.strokeStyle = "#e8d95a";
+      ctx.lineWidth = 4;
+      ctx.setLineDash([24, 20]);
+      ctx.beginPath();
+      ctx.moveTo(0, scene.road.y + scene.road.h / 2);
+      ctx.lineTo(WORLD_W, scene.road.y + scene.road.h / 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     if (scene.decor) {
       scene.decor.forEach(function (d) {
         if (d.type === "tree") drawTree(d.x, d.y);
         else if (d.type === "bush") drawBush(d.x, d.y);
         else if (d.type === "flowerbed") drawFlowerbed(d);
         else if (d.type === "mailbox") drawMailbox(d.x, d.y);
+        else if (d.type === "streetlamp") drawStreetlamp(d.x, d.y);
       });
     }
 
@@ -580,6 +637,7 @@
       if (f.type === "bed") drawBed(f);
       else if (f.type === "tv") drawTV(f);
       else if (f.type === "couch") drawCouch(f);
+      else if (f.type === "neighborhouse") drawNeighborHouse(f);
       else if (f.type === "car" && !driving) {
         drawCar(f.x, f.y, f.w, f.h, "down");
       }
