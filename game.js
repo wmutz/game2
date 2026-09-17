@@ -6,19 +6,20 @@
   var promptEl = document.getElementById("prompt");
   var stage = document.getElementById("stage");
 
-  var WORLD_W = 960;
-  var WORLD_H = 600;
+  var VIEW_W = 960;
+  var VIEW_H = 600;
+  var camera = { x: 0, y: 0 };
 
   function fitCanvas() {
     var dpr = window.devicePixelRatio || 1;
-    canvas.width = WORLD_W * dpr;
-    canvas.height = WORLD_H * dpr;
+    canvas.width = VIEW_W * dpr;
+    canvas.height = VIEW_H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     var stageRect = stage.getBoundingClientRect();
-    var scale = Math.min(stageRect.width / WORLD_W, stageRect.height / WORLD_H);
-    canvas.style.width = Math.floor(WORLD_W * scale) + "px";
-    canvas.style.height = Math.floor(WORLD_H * scale) + "px";
+    var scale = Math.min(stageRect.width / VIEW_W, stageRect.height / VIEW_H);
+    canvas.style.width = Math.floor(VIEW_W * scale) + "px";
+    canvas.style.height = Math.floor(VIEW_H * scale) + "px";
   }
   fitCanvas();
   window.addEventListener("resize", fitCanvas);
@@ -143,6 +144,16 @@
     return { x: p.x - p.w / 2, y: p.y - p.h / 2, w: p.w, h: p.h };
   }
 
+  function getWorldSize(scene) {
+    return { w: scene.worldW || VIEW_W, h: scene.worldH || VIEW_H };
+  }
+
+  function updateCamera(scene) {
+    var world = getWorldSize(scene);
+    camera.x = clamp(player.x - VIEW_W / 2, 0, Math.max(0, world.w - VIEW_W));
+    camera.y = clamp(player.y - VIEW_H / 2, 0, Math.max(0, world.h - VIEW_H));
+  }
+
   // ---------- Scenes ----------
   var WALL_COLOR = "#caa472";
   var FLOOR_COLOR = "#e8d3ab";
@@ -182,48 +193,73 @@
     {
       trigger: { x: 680, y: 540, w: 80, h: 60 },
       target: "frontyard",
-      spawn: { x: 720, y: 170, facing: "down" },
+      spawn: { x: 800, y: 90, facing: "down" },
     },
   ];
 
   scenes.frontyard = {
     bg: "#7ec850",
     sky: true,
-    bands: [
-      { y: 160, h: 40, color: "#c9c9c9" },
-      { y: 200, h: 220, color: "#454545" },
-      { y: 420, h: 40, color: "#c9c9c9" },
+    worldW: 1600,
+    worldH: 1300,
+    zones: [
+      // sidewalks first, road surface drawn on top so it wins at the corner
+      { x: 660, y: 260, w: 40, h: 740, color: "#c9c9c9" },
+      { x: 900, y: 260, w: 40, h: 740, color: "#c9c9c9" },
+      { x: 700, y: 760, w: 900, h: 40, color: "#c9c9c9" },
+      { x: 700, y: 1000, w: 900, h: 40, color: "#c9c9c9" },
+      { x: 700, y: 260, w: 200, h: 740, color: "#454545" },
+      { x: 700, y: 800, w: 900, h: 200, color: "#454545" },
     ],
-    road: { y: 200, h: 220 },
+    roadLines: [
+      { orientation: "v", pos: 800, from: 260, to: 800 },
+      { orientation: "h", pos: 900, from: 900, to: 1600 },
+    ],
     walls: [
-      { x: 0, y: 0, w: 680, h: 40 },
-      { x: 760, y: 0, w: 200, h: 40 },
-      { x: 0, y: 560, w: 960, h: 40 },
-      { x: 0, y: 0, w: 20, h: 600 },
-      { x: 940, y: 0, w: 20, h: 600 },
+      // top wall = edge of the property, gap for the front door
+      { x: 0, y: 0, w: 700, h: 40 },
+      { x: 900, y: 0, w: 700, h: 40 },
+      // world boundary
+      { x: 0, y: 1260, w: 1600, h: 40 },
+      { x: 0, y: 0, w: 40, h: 1300 },
+      { x: 1560, y: 0, w: 40, h: 1300 },
     ],
     furniture: [
-      { x: 40, y: 460, w: 200, h: 100, type: "neighborhouse", color: "#7d9fc9" },
-      { x: 720, y: 460, w: 200, h: 100, type: "neighborhouse", color: "#d9a865" },
+      { x: 440, y: 400, w: 200, h: 120, type: "neighborhouse", color: "#7d9fc9" },
+      { x: 960, y: 400, w: 200, h: 120, type: "neighborhouse", color: "#d9a865" },
+      { x: 1000, y: 560, w: 300, h: 190, type: "school", color: "#c96b5a", label: "SCHOOL" },
+      { x: 1050, y: 1040, w: 250, h: 150, type: "diner", color: "#e0a63a", label: "DINER" },
+      { x: 1360, y: 560, w: 180, h: 190, type: "cafe", color: "#8a6fb0", label: "CAFE" },
     ],
     decor: [
-      { type: "tree", x: 90, y: 90 },
-      { type: "tree", x: 870, y: 90 },
-      { type: "flowerbed", x: 150, y: 115, w: 120, h: 24 },
-      { type: "flowerbed", x: 690, y: 115, w: 120, h: 24 },
-      { type: "mailbox", x: 500, y: 145 },
-      { type: "streetlamp", x: 300, y: 190 },
-      { type: "streetlamp", x: 660, y: 190 },
-      { type: "tree", x: 480, y: 505 },
+      { type: "tree", x: 640, y: 150 },
+      { type: "tree", x: 960, y: 150 },
+      { type: "flowerbed", x: 720, y: 190, w: 70, h: 22 },
+      { type: "flowerbed", x: 810, y: 190, w: 70, h: 22 },
+      { type: "mailbox", x: 940, y: 230 },
+      { type: "streetlamp", x: 680, y: 340 },
+      { type: "streetlamp", x: 920, y: 340 },
+      { type: "streetlamp", x: 680, y: 600 },
+      { type: "streetlamp", x: 920, y: 600 },
+      { type: "bush", x: 500, y: 540 },
+      { type: "bush", x: 1100, y: 540 },
+      { type: "streetlamp", x: 1050, y: 785 },
+      { type: "streetlamp", x: 1250, y: 785 },
+      { type: "streetlamp", x: 1450, y: 785 },
+      { type: "tree", x: 1160, y: 1220 },
+      { type: "tree", x: 1240, y: 1220 },
     ],
     doors: [
       {
-        trigger: { x: 680, y: 0, w: 80, h: 70 },
+        trigger: { x: 700, y: 0, w: 200, h: 70 },
         target: "house",
         spawn: { x: 720, y: 495, facing: "up" },
       },
     ],
-    label: "Oakwood Street",
+    labelZones: [
+      { x: 0, y: 0, w: 1600, h: 760, text: "Elm Avenue" },
+    ],
+    label: "Main Street",
   };
 
   scenes.backyard = {
@@ -335,8 +371,9 @@
       testBox = playerBox({ x: player.x, y: ny2, w: player.w, h: player.h });
       if (!collidesWalls(testBox, scene, false)) player.y = ny2;
 
-      player.x = clamp(player.x, 0, WORLD_W);
-      player.y = clamp(player.y, 0, WORLD_H);
+      var world = getWorldSize(scene);
+      player.x = clamp(player.x, 0, world.w);
+      player.y = clamp(player.y, 0, world.h);
 
       // door checks
       var pbox = playerBox(player);
@@ -405,15 +442,15 @@
   }
 
   // ---------- Draw ----------
-  function drawSky() {
+  function drawSky(width) {
     var grad = ctx.createLinearGradient(0, 0, 0, 200);
     grad.addColorStop(0, "#87c9f2");
     grad.addColorStop(1, "#bfe8ff");
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, WORLD_W, 160);
+    ctx.fillRect(0, 0, width, 160);
     ctx.fillStyle = "#fff6c8";
     ctx.beginPath();
-    ctx.arc(860, 70, 34, 0, Math.PI * 2);
+    ctx.arc(width - 100, 70, 34, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -466,21 +503,42 @@
     ctx.fill();
   }
 
-  function drawNeighborHouse(f) {
+  function drawBuilding(f) {
     ctx.fillStyle = f.color;
-    ctx.fillRect(f.x, f.y + f.h * 0.35, f.w, f.h * 0.65);
-    ctx.fillStyle = "#6b4a36";
+    ctx.fillRect(f.x, f.y + f.h * 0.3, f.w, f.h * 0.7);
+
+    ctx.fillStyle = f.roofColor || "#6b4a36";
     ctx.beginPath();
-    ctx.moveTo(f.x - 10, f.y + f.h * 0.35);
-    ctx.lineTo(f.x + f.w / 2, f.y - f.h * 0.25);
-    ctx.lineTo(f.x + f.w + 10, f.y + f.h * 0.35);
+    ctx.moveTo(f.x - 10, f.y + f.h * 0.3);
+    ctx.lineTo(f.x + f.w / 2, f.y - f.h * 0.22);
+    ctx.lineTo(f.x + f.w + 10, f.y + f.h * 0.3);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#3a2a1f";
-    ctx.fillRect(f.x + f.w / 2 - 16, f.y + f.h - 34, 32, 34);
+
+    var winCount = f.w >= 280 ? 4 : f.w >= 220 ? 3 : 2;
+    var winW = 26;
+    var margin = f.w * 0.14;
+    var span = f.w - margin * 2 - winW;
     ctx.fillStyle = "#bfe3ff";
-    ctx.fillRect(f.x + 16, f.y + f.h * 0.55, 26, 26);
-    ctx.fillRect(f.x + f.w - 42, f.y + f.h * 0.55, 26, 26);
+    for (var i = 0; i < winCount; i++) {
+      var wx = f.x + margin + (winCount > 1 ? (span * i) / (winCount - 1) : span / 2);
+      ctx.fillRect(wx, f.y + f.h * 0.5, winW, 26);
+    }
+
+    ctx.fillStyle = "#3a2a1f";
+    var doorW = 32;
+    ctx.fillRect(f.x + f.w / 2 - doorW / 2, f.y + f.h - 34, doorW, 34);
+
+    if (f.label) {
+      ctx.font = "bold 13px sans-serif";
+      var signW = ctx.measureText(f.label).width + 20;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(f.x + f.w / 2 - signW / 2, f.y + f.h * 0.34, signW, 20);
+      ctx.fillStyle = "#222";
+      ctx.textAlign = "center";
+      ctx.fillText(f.label, f.x + f.w / 2, f.y + f.h * 0.34 + 14);
+      ctx.textAlign = "left";
+    }
   }
 
   function drawBed(f) {
@@ -587,37 +645,60 @@
     ctx.restore();
   }
 
+  function currentLabel(scene) {
+    if (scene.labelZones) {
+      for (var i = 0; i < scene.labelZones.length; i++) {
+        if (rectsOverlap(playerBox(player), scene.labelZones[i])) {
+          return scene.labelZones[i].text;
+        }
+      }
+    }
+    return scene.label;
+  }
+
   function drawScene() {
     var scene = getScene();
-    ctx.clearRect(0, 0, WORLD_W, WORLD_H);
+    var world = getWorldSize(scene);
+    updateCamera(scene);
+
+    ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
 
     if (scene.sky) {
       ctx.fillStyle = scene.bg;
-      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
-      drawSky();
+      ctx.fillRect(camera.x, camera.y, VIEW_W, VIEW_H);
+      drawSky(world.w);
     } else {
       ctx.fillStyle = scene.bg;
-      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      ctx.fillRect(camera.x, camera.y, VIEW_W, VIEW_H);
       // subtle floor divide for bedroom area
       ctx.fillStyle = BEDROOM_FLOOR;
       ctx.fillRect(40, 40, 420, 520);
     }
 
-    if (scene.bands) {
-      scene.bands.forEach(function (b) {
-        ctx.fillStyle = b.color;
-        ctx.fillRect(0, b.y, WORLD_W, b.h);
+    if (scene.zones) {
+      scene.zones.forEach(function (z) {
+        ctx.fillStyle = z.color;
+        ctx.fillRect(z.x, z.y, z.w, z.h);
       });
     }
 
-    if (scene.road) {
+    if (scene.roadLines) {
       ctx.strokeStyle = "#e8d95a";
       ctx.lineWidth = 4;
       ctx.setLineDash([24, 20]);
-      ctx.beginPath();
-      ctx.moveTo(0, scene.road.y + scene.road.h / 2);
-      ctx.lineTo(WORLD_W, scene.road.y + scene.road.h / 2);
-      ctx.stroke();
+      scene.roadLines.forEach(function (line) {
+        ctx.beginPath();
+        if (line.orientation === "h") {
+          ctx.moveTo(line.from, line.pos);
+          ctx.lineTo(line.to, line.pos);
+        } else {
+          ctx.moveTo(line.pos, line.from);
+          ctx.lineTo(line.pos, line.to);
+        }
+        ctx.stroke();
+      });
       ctx.setLineDash([]);
     }
 
@@ -633,26 +714,30 @@
 
     scene.walls.forEach(drawWall);
 
+    var buildingTypes = ["neighborhouse", "school", "diner", "cafe"];
     scene.furniture.forEach(function (f) {
       if (f.type === "bed") drawBed(f);
       else if (f.type === "tv") drawTV(f);
       else if (f.type === "couch") drawCouch(f);
-      else if (f.type === "neighborhouse") drawNeighborHouse(f);
+      else if (buildingTypes.indexOf(f.type) !== -1) drawBuilding(f);
       else if (f.type === "car" && !driving) {
         drawCar(f.x, f.y, f.w, f.h, "down");
       }
     });
 
-    if (scene.label) {
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
-      ctx.font = "bold 20px sans-serif";
-      ctx.fillText(scene.label, 20, 30);
-    }
-
     if (driving) {
       drawCar(carPos.x, carPos.y, 200, 130, carAngleFacing);
     } else {
       drawPlayer(player);
+    }
+
+    ctx.restore();
+
+    var label = currentLabel(scene);
+    if (label) {
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.font = "bold 20px sans-serif";
+      ctx.fillText(label, 20, 30);
     }
   }
 
