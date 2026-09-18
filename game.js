@@ -164,11 +164,12 @@
   }
 
   // ---------- NPCs: wander back and forth within a strip of sidewalk ----------
-  function makeNpc(bounds, paletteIndex, speed) {
+  function makeNpc(bounds, paletteIndex, speed, home) {
     return {
       w: 26,
       h: 38,
       bounds: bounds,
+      home: home || null,
       palette: NPC_PALETTES[paletteIndex % NPC_PALETTES.length],
       speed: speed,
       x: bounds.x + bounds.w / 2,
@@ -179,6 +180,9 @@
       facing: "down",
       moving: false,
       bobOffset: Math.random() * 10,
+      state: "wander",
+      headingHome: false,
+      insideTimer: 0,
     };
   }
 
@@ -189,6 +193,19 @@
   }
 
   function updateNpc(npc, dt) {
+    if (npc.state === "inside") {
+      npc.insideTimer -= dt;
+      npc.moving = false;
+      if (npc.insideTimer <= 0) {
+        npc.state = "wander";
+        npc.x = npc.home.x;
+        npc.y = npc.home.y;
+        pickNpcTarget(npc);
+        npc.waitTimer = 0.4 + Math.random() * 1.5;
+      }
+      return;
+    }
+
     if (npc.waitTimer > 0) {
       npc.waitTimer -= dt;
       npc.moving = false;
@@ -198,7 +215,21 @@
     var dy = npc.targetY - npc.y;
     var dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < 4) {
-      pickNpcTarget(npc);
+      if (npc.headingHome) {
+        npc.state = "inside";
+        npc.insideTimer = 5 + Math.random() * 8;
+        npc.headingHome = false;
+        npc.moving = false;
+        return;
+      }
+      if (npc.home && Math.random() < 0.3) {
+        npc.targetX = npc.home.x;
+        npc.targetY = npc.home.y;
+        npc.headingHome = true;
+      } else {
+        pickNpcTarget(npc);
+        npc.headingHome = false;
+      }
       npc.waitTimer = 0.6 + Math.random() * 2.2;
       npc.moving = false;
       return;
@@ -342,8 +373,8 @@
     ],
     label: "Main Street",
     npcs: [
-      makeNpc({ x: 670, y: 280, w: 20, h: 440 }, 0, 55),
-      makeNpc({ x: 910, y: 280, w: 20, h: 440 }, 1, 65),
+      makeNpc({ x: 670, y: 280, w: 20, h: 440 }, 0, 55, { x: 540, y: 535 }),
+      makeNpc({ x: 910, y: 280, w: 20, h: 440 }, 1, 65, { x: 1060, y: 535 }),
       makeNpc({ x: 720, y: 770, w: 400, h: 20 }, 2, 60),
       makeNpc({ x: 1150, y: 770, w: 480, h: 20 }, 3, 50),
       makeNpc({ x: 720, y: 1010, w: 900, h: 20 }, 4, 70),
@@ -958,7 +989,7 @@
 
     if (scene.npcs) {
       scene.npcs.forEach(function (npc) {
-        drawPerson(npc, npc.palette);
+        if (npc.state !== "inside") drawPerson(npc, npc.palette);
       });
     }
 
