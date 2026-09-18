@@ -140,6 +140,15 @@
     moving: false,
   };
 
+  var PLAYER_PALETTE = { shirt: "#3aa76d", hair: "#4a3524", pants: "#2f3e6b", skin: "#f2c29c" };
+  var NPC_PALETTES = [
+    { shirt: "#e07a5f", hair: "#2b2b2b", pants: "#3d5a80", skin: "#f2c29c" },
+    { shirt: "#f2cc8f", hair: "#6b4a36", pants: "#4a4a4a", skin: "#d9a878" },
+    { shirt: "#81b29a", hair: "#1f1f1f", pants: "#5c3d2e", skin: "#f2c29c" },
+    { shirt: "#bc6c25", hair: "#3a2a1f", pants: "#283618", skin: "#c78a5c" },
+    { shirt: "#9d8189", hair: "#5e3023", pants: "#22223b", skin: "#f2c29c" },
+  ];
+
   function playerBox(p) {
     return { x: p.x - p.w / 2, y: p.y - p.h / 2, w: p.w, h: p.h };
   }
@@ -152,6 +161,56 @@
     var world = getWorldSize(scene);
     camera.x = clamp(player.x - VIEW_W / 2, 0, Math.max(0, world.w - VIEW_W));
     camera.y = clamp(player.y - VIEW_H / 2, 0, Math.max(0, world.h - VIEW_H));
+  }
+
+  // ---------- NPCs: wander back and forth within a strip of sidewalk ----------
+  function makeNpc(bounds, paletteIndex, speed) {
+    return {
+      w: 26,
+      h: 38,
+      bounds: bounds,
+      palette: NPC_PALETTES[paletteIndex % NPC_PALETTES.length],
+      speed: speed,
+      x: bounds.x + bounds.w / 2,
+      y: bounds.y + bounds.h / 2,
+      targetX: bounds.x + bounds.w / 2,
+      targetY: bounds.y + bounds.h / 2,
+      waitTimer: Math.random() * 2,
+      facing: "down",
+      moving: false,
+      bobOffset: Math.random() * 10,
+    };
+  }
+
+  function pickNpcTarget(npc) {
+    var b = npc.bounds;
+    npc.targetX = b.x + Math.random() * b.w;
+    npc.targetY = b.y + Math.random() * b.h;
+  }
+
+  function updateNpc(npc, dt) {
+    if (npc.waitTimer > 0) {
+      npc.waitTimer -= dt;
+      npc.moving = false;
+      return;
+    }
+    var dx = npc.targetX - npc.x;
+    var dy = npc.targetY - npc.y;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 4) {
+      pickNpcTarget(npc);
+      npc.waitTimer = 0.6 + Math.random() * 2.2;
+      npc.moving = false;
+      return;
+    }
+    npc.moving = true;
+    npc.x += (dx / dist) * npc.speed * dt;
+    npc.y += (dy / dist) * npc.speed * dt;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      npc.facing = dx > 0 ? "right" : "left";
+    } else {
+      npc.facing = dy > 0 ? "down" : "up";
+    }
   }
 
   // ---------- Scenes ----------
@@ -282,6 +341,13 @@
       { x: 0, y: 0, w: 1700, h: 760, text: "Elm Avenue" },
     ],
     label: "Main Street",
+    npcs: [
+      makeNpc({ x: 670, y: 280, w: 20, h: 440 }, 0, 55),
+      makeNpc({ x: 910, y: 280, w: 20, h: 440 }, 1, 65),
+      makeNpc({ x: 720, y: 770, w: 400, h: 20 }, 2, 60),
+      makeNpc({ x: 1150, y: 770, w: 480, h: 20 }, 3, 50),
+      makeNpc({ x: 720, y: 1010, w: 900, h: 20 }, 4, 70),
+    ],
   };
 
   var ROOM_WALLS = [
@@ -434,6 +500,12 @@
   function update(dt) {
     var scene = getScene();
     var mv = getMoveVector();
+
+    if (scene.npcs) {
+      scene.npcs.forEach(function (npc) {
+        updateNpc(npc, dt);
+      });
+    }
 
     if (driving) {
       var speed = 320;
@@ -748,11 +820,10 @@
     ctx.restore();
   }
 
-  function drawPlayer(p) {
-    var x = p.x,
-      y = p.y;
+  function drawPerson(p, palette) {
+    var pal = palette || PLAYER_PALETTE;
     ctx.save();
-    ctx.translate(x, y);
+    ctx.translate(p.x, p.y);
 
     // shadow
     ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -760,25 +831,25 @@
     ctx.ellipse(0, p.h / 2 - 2, p.w / 2, 6, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    var bob = p.moving ? Math.sin(Date.now() / 90) * 2 : 0;
+    var bob = p.moving ? Math.sin(Date.now() / 90 + (p.bobOffset || 0)) * 2 : 0;
 
     // legs
-    ctx.fillStyle = "#2f3e6b";
+    ctx.fillStyle = pal.pants;
     ctx.fillRect(-p.w / 2 + 4, 6 + bob, 8, 14);
     ctx.fillRect(p.w / 2 - 12, 6 - bob, 8, 14);
 
     // body
-    ctx.fillStyle = "#3aa76d";
+    ctx.fillStyle = pal.shirt;
     ctx.fillRect(-p.w / 2, -10, p.w, 22);
 
     // head
-    ctx.fillStyle = "#f2c29c";
+    ctx.fillStyle = pal.skin;
     ctx.beginPath();
     ctx.arc(0, -22, 11, 0, Math.PI * 2);
     ctx.fill();
 
     // hair
-    ctx.fillStyle = "#4a3524";
+    ctx.fillStyle = pal.hair;
     ctx.beginPath();
     ctx.arc(0, -27, 11, Math.PI, 0);
     ctx.fill();
@@ -795,6 +866,10 @@
     }
 
     ctx.restore();
+  }
+
+  function drawPlayer(p) {
+    drawPerson(p, PLAYER_PALETTE);
   }
 
   function currentLabel(scene) {
@@ -880,6 +955,12 @@
         drawCar(f.x, f.y, f.w, f.h, "down");
       }
     });
+
+    if (scene.npcs) {
+      scene.npcs.forEach(function (npc) {
+        drawPerson(npc, npc.palette);
+      });
+    }
 
     if (driving) {
       drawCar(carPos.x, carPos.y, 200, 130, carAngleFacing);
