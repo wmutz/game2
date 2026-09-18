@@ -159,8 +159,10 @@
 
   function updateCamera(scene) {
     var world = getWorldSize(scene);
-    camera.x = clamp(player.x - VIEW_W / 2, 0, Math.max(0, world.w - VIEW_W));
-    camera.y = clamp(player.y - VIEW_H / 2, 0, Math.max(0, world.h - VIEW_H));
+    var focusX = driving ? carPos.x : player.x;
+    var focusY = driving ? carPos.y : player.y;
+    camera.x = clamp(focusX - VIEW_W / 2, 0, Math.max(0, world.w - VIEW_W));
+    camera.y = clamp(focusY - VIEW_H / 2, 0, Math.max(0, world.h - VIEW_H));
   }
 
   // ---------- NPCs: wander back and forth within a strip of sidewalk ----------
@@ -295,15 +297,15 @@
     worldH: 1300,
     zones: [
       // sidewalks first, road surface drawn on top so it wins at the corner
-      { x: 660, y: 260, w: 40, h: 740, color: "#c9c9c9" },
-      { x: 900, y: 260, w: 40, h: 740, color: "#c9c9c9" },
+      { x: 660, y: 170, w: 40, h: 830, color: "#c9c9c9" },
+      { x: 900, y: 170, w: 40, h: 830, color: "#c9c9c9" },
       { x: 700, y: 760, w: 960, h: 40, color: "#c9c9c9" },
       { x: 700, y: 1000, w: 960, h: 40, color: "#c9c9c9" },
-      { x: 700, y: 260, w: 200, h: 740, color: "#454545" },
+      { x: 700, y: 170, w: 200, h: 830, color: "#454545" },
       { x: 700, y: 800, w: 960, h: 200, color: "#454545" },
     ],
     roadLines: [
-      { orientation: "v", pos: 800, from: 260, to: 800 },
+      { orientation: "v", pos: 800, from: 170, to: 800 },
       { orientation: "h", pos: 900, from: 900, to: 1660 },
     ],
     walls: [
@@ -321,12 +323,13 @@
       { x: 960, y: 560, w: 180, h: 190, type: "diner", color: "#e0a63a", label: "DINER" },
       { x: 1160, y: 560, w: 260, h: 190, type: "school", color: "#c96b5a", label: "SCHOOL" },
       { x: 1440, y: 560, w: 170, h: 190, type: "cafe", color: "#8a6fb0", label: "CAFE" },
+      { x: 700, y: 180, w: 200, h: 130, type: "car" },
     ],
     decor: [
-      { type: "tree", x: 640, y: 150 },
-      { type: "tree", x: 960, y: 150 },
-      { type: "flowerbed", x: 720, y: 190, w: 70, h: 22 },
-      { type: "flowerbed", x: 810, y: 190, w: 70, h: 22 },
+      { type: "tree", x: 640, y: 110 },
+      { type: "tree", x: 960, y: 110 },
+      { type: "flowerbed", x: 700, y: 95, w: 60, h: 18 },
+      { type: "flowerbed", x: 830, y: 95, w: 60, h: 18 },
       { type: "mailbox", x: 940, y: 230 },
       { type: "streetlamp", x: 680, y: 340 },
       { type: "streetlamp", x: 920, y: 340 },
@@ -528,9 +531,10 @@
       { x: 0, y: 0, w: 20, h: 600 },
       { x: 940, y: 0, w: 20, h: 600 },
     ],
-    furniture: [{ x: 300, y: 250, w: 200, h: 130, type: "car" }],
+    furniture: [],
     decor: [
       { type: "tree", x: 850, y: 460 },
+      { type: "tree", x: 300, y: 300 },
       { type: "bush", x: 90, y: 460 },
       { type: "bush", x: 150, y: 460 },
     ],
@@ -542,7 +546,6 @@
       },
     ],
     label: "Backyard",
-    car: { x: 300, y: 250, w: 200, h: 130, parkX: 300, parkY: 250 },
   };
 
   var currentSceneKey = "house";
@@ -604,13 +607,13 @@
       }
 
       if (interactPressed) {
-        // exit car, stand beside it, snap car back to parking spot
+        // exit the car and stand beside it, right where it was left
         var scn = getScene();
         var f = scn.furniture.filter(function (it) {
           return it.type === "car";
         })[0];
-        f.x = scn.car.parkX;
-        f.y = scn.car.parkY;
+        f.x = carPos.x;
+        f.y = carPos.y;
         player.x = f.x - player.w;
         player.y = f.y + f.h / 2;
         driving = false;
@@ -955,8 +958,11 @@
 
   function currentLabel(scene) {
     if (scene.labelZones) {
+      var box = driving
+        ? { x: carPos.x, y: carPos.y, w: 200, h: 130 }
+        : playerBox(player);
       for (var i = 0; i < scene.labelZones.length; i++) {
-        if (rectsOverlap(playerBox(player), scene.labelZones[i])) {
+        if (rectsOverlap(box, scene.labelZones[i])) {
           return scene.labelZones[i].text;
         }
       }
