@@ -163,6 +163,7 @@
 
   scenes.house = {
     bg: FLOOR_COLOR,
+    floorAccent: { x: 40, y: 40, w: 420, h: 520, color: BEDROOM_FLOOR },
     walls: [
       // top wall, gap for back door x:600-680
       { x: 0, y: 0, w: 600, h: 40 },
@@ -200,36 +201,36 @@
   scenes.frontyard = {
     bg: "#7ec850",
     sky: true,
-    worldW: 1600,
+    worldW: 1700,
     worldH: 1300,
     zones: [
       // sidewalks first, road surface drawn on top so it wins at the corner
       { x: 660, y: 260, w: 40, h: 740, color: "#c9c9c9" },
       { x: 900, y: 260, w: 40, h: 740, color: "#c9c9c9" },
-      { x: 700, y: 760, w: 900, h: 40, color: "#c9c9c9" },
-      { x: 700, y: 1000, w: 900, h: 40, color: "#c9c9c9" },
+      { x: 700, y: 760, w: 960, h: 40, color: "#c9c9c9" },
+      { x: 700, y: 1000, w: 960, h: 40, color: "#c9c9c9" },
       { x: 700, y: 260, w: 200, h: 740, color: "#454545" },
-      { x: 700, y: 800, w: 900, h: 200, color: "#454545" },
+      { x: 700, y: 800, w: 960, h: 200, color: "#454545" },
     ],
     roadLines: [
       { orientation: "v", pos: 800, from: 260, to: 800 },
-      { orientation: "h", pos: 900, from: 900, to: 1600 },
+      { orientation: "h", pos: 900, from: 900, to: 1660 },
     ],
     walls: [
       // top wall = edge of the property, gap for the front door
       { x: 0, y: 0, w: 700, h: 40 },
       { x: 900, y: 0, w: 700, h: 40 },
       // world boundary
-      { x: 0, y: 1260, w: 1600, h: 40 },
+      { x: 0, y: 1260, w: 1700, h: 40 },
       { x: 0, y: 0, w: 40, h: 1300 },
-      { x: 1560, y: 0, w: 40, h: 1300 },
+      { x: 1660, y: 0, w: 40, h: 1300 },
     ],
     furniture: [
       { x: 440, y: 400, w: 200, h: 120, type: "neighborhouse", color: "#7d9fc9" },
       { x: 960, y: 400, w: 200, h: 120, type: "neighborhouse", color: "#d9a865" },
-      { x: 1000, y: 560, w: 300, h: 190, type: "school", color: "#c96b5a", label: "SCHOOL" },
-      { x: 1050, y: 1040, w: 250, h: 150, type: "diner", color: "#e0a63a", label: "DINER" },
-      { x: 1360, y: 560, w: 180, h: 190, type: "cafe", color: "#8a6fb0", label: "CAFE" },
+      { x: 960, y: 560, w: 180, h: 190, type: "diner", color: "#e0a63a", label: "DINER" },
+      { x: 1160, y: 560, w: 260, h: 190, type: "school", color: "#c96b5a", label: "SCHOOL" },
+      { x: 1440, y: 560, w: 170, h: 190, type: "cafe", color: "#8a6fb0", label: "CAFE" },
     ],
     decor: [
       { type: "tree", x: 640, y: 150 },
@@ -243,11 +244,11 @@
       { type: "streetlamp", x: 920, y: 600 },
       { type: "bush", x: 500, y: 540 },
       { type: "bush", x: 1100, y: 540 },
-      { type: "streetlamp", x: 1050, y: 785 },
-      { type: "streetlamp", x: 1250, y: 785 },
-      { type: "streetlamp", x: 1450, y: 785 },
-      { type: "tree", x: 1160, y: 1220 },
-      { type: "tree", x: 1240, y: 1220 },
+      { type: "streetlamp", x: 1150, y: 785 },
+      { type: "streetlamp", x: 1420, y: 785 },
+      { type: "streetlamp", x: 1620, y: 785 },
+      { type: "tree", x: 1050, y: 1100 },
+      { type: "tree", x: 1300, y: 1150 },
     ],
     doors: [
       {
@@ -255,11 +256,119 @@
         target: "house",
         spawn: { x: 720, y: 495, facing: "up" },
       },
+      {
+        trigger: { x: 1000, y: 750, w: 100, h: 40 },
+        target: "diner",
+        interact: true,
+        prompt: "Tap A or press E to go into the diner",
+        spawn: { x: 480, y: 230, facing: "down" },
+      },
+      {
+        trigger: { x: 1240, y: 750, w: 100, h: 40 },
+        target: "school",
+        interact: true,
+        prompt: "Tap A or press E to go into the school",
+        spawn: { x: 480, y: 230, facing: "down" },
+      },
+      {
+        trigger: { x: 1475, y: 750, w: 100, h: 40 },
+        target: "cafe",
+        interact: true,
+        prompt: "Tap A or press E to go into the cafe",
+        spawn: { x: 480, y: 230, facing: "down" },
+      },
     ],
     labelZones: [
-      { x: 0, y: 0, w: 1600, h: 760, text: "Elm Avenue" },
+      { x: 0, y: 0, w: 1700, h: 760, text: "Elm Avenue" },
     ],
     label: "Main Street",
+  };
+
+  var ROOM_WALLS = [
+    { x: 0, y: 0, w: 960, h: 40 },
+    { x: 0, y: 560, w: 400, h: 40 },
+    { x: 560, y: 560, w: 400, h: 40 },
+    { x: 0, y: 0, w: 40, h: 600 },
+    { x: 920, y: 0, w: 40, h: 600 },
+  ];
+  var ROOM_EXIT_TRIGGER = { x: 400, y: 540, w: 160, h: 60 };
+
+  scenes.diner = {
+    bg: FLOOR_COLOR,
+    walls: ROOM_WALLS,
+    furniture: [
+      { x: 80, y: 80, w: 500, h: 60, type: "block", color: "#8a5a34", accent: "#d8c39a" },
+      { x: 700, y: 100, w: 90, h: 70, type: "block", color: "#c0392b" },
+      { x: 700, y: 250, w: 90, h: 70, type: "block", color: "#c0392b" },
+      { x: 700, y: 400, w: 90, h: 70, type: "block", color: "#c0392b" },
+    ],
+    decor: [
+      { type: "stool", x: 130, y: 160 },
+      { type: "stool", x: 190, y: 160 },
+      { type: "stool", x: 250, y: 160 },
+      { type: "stool", x: 310, y: 160 },
+      { type: "stool", x: 370, y: 160 },
+    ],
+    doors: [
+      {
+        trigger: ROOM_EXIT_TRIGGER,
+        target: "frontyard",
+        spawn: { x: 1050, y: 780, facing: "down" },
+      },
+    ],
+    label: "Diner",
+  };
+
+  scenes.school = {
+    bg: FLOOR_COLOR,
+    walls: ROOM_WALLS,
+    furniture: [
+      { x: 350, y: 60, w: 260, h: 70, type: "block", color: "#2f4f3a" },
+      { x: 430, y: 150, w: 100, h: 50, type: "block", color: "#8a5a34" },
+      // desks kept clear of the x:400-560 aisle so the entrance and exit
+      // door stay reachable in a straight line
+      { x: 180, y: 260, w: 70, h: 50, type: "block", color: "#a9784f" },
+      { x: 730, y: 260, w: 70, h: 50, type: "block", color: "#a9784f" },
+      { x: 180, y: 360, w: 70, h: 50, type: "block", color: "#a9784f" },
+      { x: 730, y: 360, w: 70, h: 50, type: "block", color: "#a9784f" },
+      { x: 180, y: 460, w: 70, h: 50, type: "block", color: "#a9784f" },
+      { x: 730, y: 460, w: 70, h: 50, type: "block", color: "#a9784f" },
+    ],
+    doors: [
+      {
+        trigger: ROOM_EXIT_TRIGGER,
+        target: "frontyard",
+        spawn: { x: 1290, y: 780, facing: "down" },
+      },
+    ],
+    label: "Classroom",
+  };
+
+  scenes.cafe = {
+    bg: FLOOR_COLOR,
+    walls: ROOM_WALLS,
+    furniture: [
+      { x: 600, y: 80, w: 280, h: 60, type: "block", color: "#6b4a36", accent: "#d8c39a" },
+      { x: 150, y: 250, w: 60, h: 60, type: "block", color: "#caa472" },
+      { x: 350, y: 250, w: 60, h: 60, type: "block", color: "#caa472" },
+      { x: 150, y: 420, w: 60, h: 60, type: "block", color: "#caa472" },
+    ],
+    decor: [
+      { type: "stool", x: 135, y: 295 },
+      { type: "stool", x: 225, y: 280 },
+      { type: "stool", x: 335, y: 295 },
+      { type: "stool", x: 425, y: 280 },
+      { type: "stool", x: 135, y: 465 },
+      { type: "stool", x: 225, y: 450 },
+    ],
+    doors: [
+      {
+        trigger: ROOM_EXIT_TRIGGER,
+        target: "frontyard",
+        spawn: { x: 1525, y: 780, facing: "down" },
+      },
+    ],
+    label: "Cafe",
   };
 
   scenes.backyard = {
@@ -375,17 +484,22 @@
       player.x = clamp(player.x, 0, world.w);
       player.y = clamp(player.y, 0, world.h);
 
-      // door checks
+      // door checks - "auto" doors trigger by walking through them;
+      // "interact" doors (building entrances) need a button press, so
+      // wandering past one doesn't suck the player inside.
       var pbox = playerBox(player);
       var teleported = false;
-      var overlappingDoor = scene.doors.some(function (door) {
+      var autoDoors = scene.doors.filter(function (door) {
+        return !door.interact;
+      });
+      var overlappingAuto = autoDoors.some(function (door) {
         return rectsOverlap(pbox, door.trigger);
       });
 
       if (armDoorAfterExit) {
-        if (!overlappingDoor) armDoorAfterExit = false;
-      } else if (overlappingDoor) {
-        scene.doors.forEach(function (door) {
+        if (!overlappingAuto) armDoorAfterExit = false;
+      } else if (overlappingAuto) {
+        autoDoors.forEach(function (door) {
           if (teleported) return;
           if (rectsOverlap(pbox, door.trigger)) {
             changeScene(door.target, door.spawn);
@@ -394,7 +508,28 @@
         });
       }
 
+      var shownPrompt = false;
+
       if (!teleported) {
+        var interactDoors = scene.doors.filter(function (door) {
+          return door.interact;
+        });
+        var nearDoor = null;
+        interactDoors.forEach(function (door) {
+          if (!nearDoor && rectsOverlap(pbox, door.trigger)) nearDoor = door;
+        });
+        if (nearDoor) {
+          showPrompt(nearDoor.prompt);
+          shownPrompt = true;
+          if (interactPressed) {
+            changeScene(nearDoor.target, nearDoor.spawn);
+            teleported = true;
+            hidePrompt();
+          }
+        }
+      }
+
+      if (!teleported && !shownPrompt) {
         // car interact prompt
         var cb = carBox(scene);
         var nearCar =
@@ -405,16 +540,17 @@
           );
         if (nearCar) {
           showPrompt("Tap A or press E to get in the car");
+          shownPrompt = true;
           if (interactPressed) {
             driving = true;
             carPos.x = cb.x;
             carPos.y = cb.y;
             hidePrompt();
           }
-        } else {
-          hidePrompt();
         }
       }
+
+      if (!shownPrompt) hidePrompt();
     }
 
     interactPressed = false;
@@ -473,6 +609,22 @@
     ctx.beginPath();
     ctx.arc(x, y, 22, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  function drawStool(x, y) {
+    ctx.fillStyle = "#8a5a34";
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawBlock(f) {
+    ctx.fillStyle = f.color;
+    ctx.fillRect(f.x, f.y, f.w, f.h);
+    if (f.accent) {
+      ctx.fillStyle = f.accent;
+      ctx.fillRect(f.x, f.y, f.w, Math.min(14, f.h * 0.3));
+    }
   }
 
   function drawFlowerbed(d) {
@@ -672,9 +824,11 @@
     } else {
       ctx.fillStyle = scene.bg;
       ctx.fillRect(camera.x, camera.y, VIEW_W, VIEW_H);
-      // subtle floor divide for bedroom area
-      ctx.fillStyle = BEDROOM_FLOOR;
-      ctx.fillRect(40, 40, 420, 520);
+      if (scene.floorAccent) {
+        ctx.fillStyle = scene.floorAccent.color;
+        var fa = scene.floorAccent;
+        ctx.fillRect(fa.x, fa.y, fa.w, fa.h);
+      }
     }
 
     if (scene.zones) {
@@ -709,6 +863,7 @@
         else if (d.type === "flowerbed") drawFlowerbed(d);
         else if (d.type === "mailbox") drawMailbox(d.x, d.y);
         else if (d.type === "streetlamp") drawStreetlamp(d.x, d.y);
+        else if (d.type === "stool") drawStool(d.x, d.y);
       });
     }
 
@@ -719,6 +874,7 @@
       if (f.type === "bed") drawBed(f);
       else if (f.type === "tv") drawTV(f);
       else if (f.type === "couch") drawCouch(f);
+      else if (f.type === "block") drawBlock(f);
       else if (buildingTypes.indexOf(f.type) !== -1) drawBuilding(f);
       else if (f.type === "car" && !driving) {
         drawCar(f.x, f.y, f.w, f.h, "down");
