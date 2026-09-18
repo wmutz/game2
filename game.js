@@ -316,8 +316,8 @@
       { x: 1660, y: 0, w: 40, h: 1300 },
     ],
     furniture: [
-      { x: 440, y: 400, w: 200, h: 120, type: "neighborhouse", color: "#7d9fc9" },
-      { x: 960, y: 400, w: 200, h: 120, type: "neighborhouse", color: "#d9a865" },
+      { x: 440, y: 280, w: 200, h: 120, type: "neighborhouse", color: "#7d9fc9" },
+      { x: 960, y: 280, w: 200, h: 120, type: "neighborhouse", color: "#d9a865" },
       { x: 960, y: 560, w: 180, h: 190, type: "diner", color: "#e0a63a", label: "DINER" },
       { x: 1160, y: 560, w: 260, h: 190, type: "school", color: "#c96b5a", label: "SCHOOL" },
       { x: 1440, y: 560, w: 170, h: 190, type: "cafe", color: "#8a6fb0", label: "CAFE" },
@@ -332,8 +332,8 @@
       { type: "streetlamp", x: 920, y: 340 },
       { type: "streetlamp", x: 680, y: 600 },
       { type: "streetlamp", x: 920, y: 600 },
-      { type: "bush", x: 500, y: 540 },
-      { type: "bush", x: 1100, y: 540 },
+      { type: "bush", x: 500, y: 420 },
+      { type: "bush", x: 1100, y: 420 },
       { type: "streetlamp", x: 1150, y: 785 },
       { type: "streetlamp", x: 1420, y: 785 },
       { type: "streetlamp", x: 1620, y: 785 },
@@ -367,14 +367,28 @@
         prompt: "Tap A or press E to go into the cafe",
         spawn: { x: 480, y: 230, facing: "down" },
       },
+      {
+        trigger: { x: 490, y: 400, w: 100, h: 40 },
+        target: "blueHouse",
+        interact: true,
+        prompt: "Tap A or press E to go into the house",
+        spawn: { x: 480, y: 230, facing: "down" },
+      },
+      {
+        trigger: { x: 1010, y: 400, w: 100, h: 40 },
+        target: "yellowHouse",
+        interact: true,
+        prompt: "Tap A or press E to go into the house",
+        spawn: { x: 480, y: 230, facing: "down" },
+      },
     ],
     labelZones: [
       { x: 0, y: 0, w: 1700, h: 760, text: "Elm Avenue" },
     ],
     label: "Main Street",
     npcs: [
-      makeNpc({ x: 670, y: 280, w: 20, h: 440 }, 0, 55, { x: 540, y: 535 }),
-      makeNpc({ x: 910, y: 280, w: 20, h: 440 }, 1, 65, { x: 1060, y: 535 }),
+      makeNpc({ x: 670, y: 280, w: 20, h: 440 }, 0, 55, { x: 540, y: 415 }),
+      makeNpc({ x: 910, y: 280, w: 20, h: 440 }, 1, 65, { x: 1060, y: 415 }),
       makeNpc({ x: 720, y: 770, w: 400, h: 20 }, 2, 60),
       makeNpc({ x: 1150, y: 770, w: 480, h: 20 }, 3, 50),
       makeNpc({ x: 720, y: 1010, w: 900, h: 20 }, 4, 70),
@@ -466,6 +480,42 @@
       },
     ],
     label: "Cafe",
+  };
+
+  scenes.blueHouse = {
+    bg: FLOOR_COLOR,
+    walls: ROOM_WALLS,
+    furniture: [
+      { x: 850, y: 130, w: 40, h: 80, type: "tv" },
+      { x: 620, y: 370, w: 180, h: 60, type: "couch" },
+      { x: 150, y: 90, w: 70, h: 50, type: "block", color: "#8a5a34" },
+    ],
+    doors: [
+      {
+        trigger: ROOM_EXIT_TRIGGER,
+        target: "frontyard",
+        spawn: { x: 540, y: 440, facing: "down" },
+      },
+    ],
+    label: "A Neighbor's House",
+  };
+
+  scenes.yellowHouse = {
+    bg: FLOOR_COLOR,
+    walls: ROOM_WALLS,
+    furniture: [
+      { x: 120, y: 90, w: 160, h: 110, type: "bed" },
+      { x: 320, y: 110, w: 60, h: 60, type: "block", color: "#8a5a34" },
+      { x: 650, y: 350, w: 180, h: 60, type: "couch" },
+    ],
+    doors: [
+      {
+        trigger: ROOM_EXIT_TRIGGER,
+        target: "frontyard",
+        spawn: { x: 1060, y: 440, facing: "down" },
+      },
+    ],
+    label: "A Neighbor's House",
   };
 
   scenes.backyard = {
