@@ -199,10 +199,10 @@
   }
 
   // ---------- NPCs: wander back and forth within a strip of sidewalk ----------
-  function makeNpc(bounds, paletteIndex, speed, home) {
+  function makeNpc(bounds, paletteIndex, speed, home, size) {
     return {
-      w: 26,
-      h: 38,
+      w: (size && size.w) || 26,
+      h: (size && size.h) || 38,
       bounds: bounds,
       home: home || null,
       palette: NPC_PALETTES[paletteIndex % NPC_PALETTES.length],
@@ -464,6 +464,7 @@
       },
     ],
     label: "Diner",
+    npcs: [makeNpc({ x: 150, y: 50, w: 350, h: 20 }, 1, 35)],
   };
 
   scenes.school = {
@@ -489,6 +490,12 @@
       },
     ],
     label: "Classroom",
+    npcs: [
+      makeNpc({ x: 280, y: 210, w: 420, h: 30 }, 0, 40),
+      makeNpc({ x: 300, y: 260, w: 150, h: 260 }, 2, 48, null, { w: 20, h: 30 }),
+      makeNpc({ x: 500, y: 260, w: 180, h: 260 }, 3, 52, null, { w: 20, h: 30 }),
+      makeNpc({ x: 350, y: 260, w: 280, h: 100 }, 4, 46, null, { w: 20, h: 30 }),
+    ],
   };
 
   scenes.cafe = {
@@ -516,6 +523,7 @@
       },
     ],
     label: "Cafe",
+    npcs: [makeNpc({ x: 630, y: 50, w: 220, h: 20 }, 4, 35)],
   };
 
   scenes.blueHouse = {
