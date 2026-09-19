@@ -136,6 +136,21 @@
     return "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")";
   }
 
+  function lerpColor(hex1, hex2, t) {
+    var n1 = parseInt(hex1.slice(1), 16),
+      n2 = parseInt(hex2.slice(1), 16);
+    var r1 = (n1 >> 16) & 255,
+      g1 = (n1 >> 8) & 255,
+      b1 = n1 & 255;
+    var r2 = (n2 >> 16) & 255,
+      g2 = (n2 >> 8) & 255,
+      b2 = n2 & 255;
+    var r = r1 + (r2 - r1) * t,
+      g = g1 + (g2 - g1) * t,
+      b = b1 + (b2 - b1) * t;
+    return "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")";
+  }
+
   function groundShadow(cx, cy, rx, ry) {
     ctx.fillStyle = "rgba(0,0,0,0.22)";
     ctx.beginPath();
@@ -289,7 +304,7 @@
       { x: 460, y: 330, w: 40, h: 230 },
     ],
     furniture: [
-      { x: 70, y: 70, w: 180, h: 120, type: "bed" },
+      { x: 70, y: 70, w: 180, h: 120, type: "bed", sleepable: true },
       { x: 880, y: 120, w: 40, h: 80, type: "tv" },
       { x: 620, y: 400, w: 180, h: 60, type: "couch" },
     ],
@@ -566,6 +581,58 @@
     label: "Backyard",
   };
 
+  // ---------- Day/night clock ----------
+  var DAY_LENGTH_SECONDS = 360; // one full day/night cycle, real seconds
+  var HOURS_PER_SECOND = 24 / DAY_LENGTH_SECONDS;
+  var gameHour = 8; // start at 8am
+
+  var sleeping = false;
+  var sleepTimer = 0;
+  var sleepFade = 0;
+  var sleepJumped = false;
+
+  function nightAmount() {
+    var h = gameHour;
+    if (h >= 7 && h <= 17) return 0;
+    if (h > 17 && h < 19) return (h - 17) / 2;
+    if (h >= 5 && h < 7) return 1 - (h - 5) / 2;
+    return 1; // 19:00-24:00 and 0:00-5:00
+  }
+
+  function formatTime(h) {
+    var totalMin = Math.floor(h * 60);
+    var hh = Math.floor(totalMin / 60) % 24;
+    var mm = totalMin % 60;
+    var period = hh >= 12 ? "PM" : "AM";
+    var hh12 = hh % 12;
+    if (hh12 === 0) hh12 = 12;
+    var mmStr = mm < 10 ? "0" + mm : "" + mm;
+    return hh12 + ":" + mmStr + " " + period;
+  }
+
+  function updateSleepFade(dt) {
+    sleepTimer += dt;
+    var t1 = 0.5,
+      t2 = 0.9,
+      t3 = 1.4;
+    if (sleepTimer < t1) {
+      sleepFade = sleepTimer / t1;
+    } else if (sleepTimer < t2) {
+      sleepFade = 1;
+      if (!sleepJumped) {
+        gameHour = 7;
+        sleepJumped = true;
+      }
+    } else if (sleepTimer < t3) {
+      sleepFade = 1 - (sleepTimer - t2) / (t3 - t2);
+    } else {
+      sleeping = false;
+      sleepFade = 0;
+      sleepJumped = false;
+      sleepTimer = 0;
+    }
+  }
+
   var currentSceneKey = "house";
   var driving = false;
   // carPos is the car's CENTER point (while driving); the parked furniture
@@ -613,6 +680,14 @@
   }
 
   function update(dt) {
+    gameHour = (gameHour + dt * HOURS_PER_SECOND) % 24;
+
+    if (sleeping) {
+      updateSleepFade(dt);
+      interactPressed = false;
+      return;
+    }
+
     var scene = getScene();
     var mv = getMoveVector();
 
@@ -745,6 +820,29 @@
         }
       }
 
+      if (!teleported && !shownPrompt && nightAmount() > 0.4) {
+        var bed = scene.furniture.filter(function (it) {
+          return it.sleepable;
+        })[0];
+        var nearBed =
+          bed &&
+          rectsOverlap(
+            { x: player.x - 50, y: player.y - 50, w: 100, h: 100 },
+            bed
+          );
+        if (nearBed) {
+          showPrompt("Tap A or press E to sleep");
+          shownPrompt = true;
+          if (interactPressed) {
+            sleeping = true;
+            sleepTimer = 0;
+            sleepFade = 0;
+            sleepJumped = false;
+            hidePrompt();
+          }
+        }
+      }
+
       if (!shownPrompt) hidePrompt();
     }
 
@@ -773,16 +871,58 @@
   }
 
   // ---------- Draw ----------
+  var STAR_FRACTIONS = [];
+  (function () {
+    for (var i = 0; i < 40; i++) {
+      STAR_FRACTIONS.push({
+        fx: (i * 0.163 + 0.04) % 1,
+        fy: ((i * 0.271 + 0.09) % 1) * 0.85,
+      });
+    }
+  })();
+
   function drawSky(width) {
+    var n = nightAmount();
+    var topColor = lerpColor("#87c9f2", "#0a0e23", n);
+    var bottomColor = lerpColor("#bfe8ff", "#1c2547", n);
     var grad = ctx.createLinearGradient(0, 0, 0, 200);
-    grad.addColorStop(0, "#87c9f2");
-    grad.addColorStop(1, "#bfe8ff");
+    grad.addColorStop(0, topColor);
+    grad.addColorStop(1, bottomColor);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, 160);
-    ctx.fillStyle = "#fff6c8";
-    ctx.beginPath();
-    ctx.arc(width - 100, 70, 34, 0, Math.PI * 2);
-    ctx.fill();
+
+    if (n > 0.15) {
+      ctx.fillStyle = "rgba(255,255,255," + Math.min(1, (n - 0.15) / 0.5) * 0.9 + ")";
+      STAR_FRACTIONS.forEach(function (s) {
+        ctx.beginPath();
+        ctx.arc(s.fx * width, s.fy * 150, 1.4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    var sunAlpha = Math.max(0, 1 - n * 1.6);
+    var moonAlpha = Math.max(0, (n - 0.35) / 0.65);
+
+    if (sunAlpha > 0) {
+      ctx.globalAlpha = sunAlpha;
+      ctx.fillStyle = "#fff6c8";
+      ctx.beginPath();
+      ctx.arc(width - 100, 70, 34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    if (moonAlpha > 0) {
+      ctx.globalAlpha = moonAlpha;
+      ctx.fillStyle = "#f4f1e0";
+      ctx.beginPath();
+      ctx.arc(width - 100, 70, 26, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bottomColor;
+      ctx.beginPath();
+      ctx.arc(width - 88, 60, 24, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
   }
 
   function drawWall(w) {
@@ -1281,6 +1421,14 @@
 
     ctx.restore();
 
+    if (scene.sky) {
+      var n = nightAmount();
+      if (n > 0) {
+        ctx.fillStyle = "rgba(8,12,40," + n * 0.55 + ")";
+        ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      }
+    }
+
     var vignette = ctx.createRadialGradient(
       VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.35,
       VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.85
@@ -1295,6 +1443,28 @@
       ctx.fillStyle = "rgba(0,0,0,0.55)";
       ctx.font = "bold 20px sans-serif";
       ctx.fillText(label, 20, 30);
+    }
+
+    ctx.font = "bold 16px sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillText(
+      formatTime(gameHour) + (nightAmount() > 0.4 ? " 🌙" : " ☀️"),
+      VIEW_W - 16,
+      28
+    );
+    ctx.textAlign = "left";
+
+    if (sleepFade > 0) {
+      ctx.fillStyle = "rgba(0,0,0," + sleepFade + ")";
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      if (sleepFade > 0.6) {
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.font = "bold 22px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Zzz...", VIEW_W / 2, VIEW_H / 2);
+        ctx.textAlign = "left";
+      }
     }
   }
 
