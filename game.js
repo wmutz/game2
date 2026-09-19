@@ -341,7 +341,7 @@
       { x: 960, y: 560, w: 180, h: 190, type: "diner", color: "#e0a63a", label: "DINER" },
       { x: 1160, y: 560, w: 260, h: 190, type: "school", color: "#c96b5a", label: "SCHOOL" },
       { x: 1440, y: 560, w: 170, h: 190, type: "cafe", color: "#8a6fb0", label: "CAFE" },
-      { x: 700, y: 180, w: 200, h: 130, type: "car" },
+      { x: 718, y: 189, w: 64, h: 112, type: "car", facing: "down" },
     ],
     decor: [
       { type: "tree", x: 640, y: 110 },
@@ -568,9 +568,20 @@
 
   var currentSceneKey = "house";
   var driving = false;
+  // carPos is the car's CENTER point (while driving); the parked furniture
+  // entry keeps the usual top-left + w/h like every other piece of furniture.
   var carPos = { x: 0, y: 0 };
   var carAngleFacing = "down";
   var armDoorAfterExit = false;
+
+  var CAR_LENGTH = 112; // nose-to-tail
+  var CAR_WIDTH = 64; // side-to-side, narrow enough to fit one lane
+
+  function carDims(facing) {
+    return facing === "left" || facing === "right"
+      ? { w: CAR_LENGTH, h: CAR_WIDTH }
+      : { w: CAR_WIDTH, h: CAR_LENGTH };
+  }
 
   function getScene() {
     return scenes[currentSceneKey];
@@ -594,9 +605,11 @@
       return it.type === "car";
     })[0];
     if (!f) return null;
-    var cx = driving ? carPos.x : f.x;
-    var cy = driving ? carPos.y : f.y;
-    return { x: cx, y: cy, w: f.w, h: f.h };
+    if (driving) {
+      var dims = carDims(carAngleFacing);
+      return { x: carPos.x - dims.w / 2, y: carPos.y - dims.h / 2, w: dims.w, h: dims.h };
+    }
+    return { x: f.x, y: f.y, w: f.w, h: f.h };
   }
 
   function update(dt) {
@@ -611,18 +624,18 @@
 
     if (driving) {
       var speed = 320;
-      var nx = carPos.x + mv.x * speed * dt;
-      var ny = carPos.y + mv.y * speed * dt;
-      var box = { x: nx, y: carPos.y, w: 200, h: 130 };
-      if (!collidesWalls(box, scene, true)) carPos.x = nx;
-      box = { x: carPos.x, y: ny, w: 200, h: 130 };
-      if (!collidesWalls(box, scene, true)) carPos.y = ny;
-
       if (mv.x !== 0 || mv.y !== 0) {
         carAngleFacing = Math.abs(mv.x) > Math.abs(mv.y)
           ? (mv.x > 0 ? "right" : "left")
           : (mv.y > 0 ? "down" : "up");
       }
+      var dims = carDims(carAngleFacing);
+      var nx = carPos.x + mv.x * speed * dt;
+      var ny = carPos.y + mv.y * speed * dt;
+      var box = { x: nx - dims.w / 2, y: carPos.y - dims.h / 2, w: dims.w, h: dims.h };
+      if (!collidesWalls(box, scene, true)) carPos.x = nx;
+      box = { x: carPos.x - dims.w / 2, y: ny - dims.h / 2, w: dims.w, h: dims.h };
+      if (!collidesWalls(box, scene, true)) carPos.y = ny;
 
       if (interactPressed) {
         // exit the car and stand beside it, right where it was left
@@ -630,8 +643,12 @@
         var f = scn.furniture.filter(function (it) {
           return it.type === "car";
         })[0];
-        f.x = carPos.x;
-        f.y = carPos.y;
+        var exitDims = carDims(carAngleFacing);
+        f.x = carPos.x - exitDims.w / 2;
+        f.y = carPos.y - exitDims.h / 2;
+        f.w = exitDims.w;
+        f.h = exitDims.h;
+        f.facing = carAngleFacing;
         player.x = f.x - player.w;
         player.y = f.y + f.h / 2;
         driving = false;
@@ -716,9 +733,13 @@
           showPrompt("Tap A or press E to get in the car");
           shownPrompt = true;
           if (interactPressed) {
+            var carF = scene.furniture.filter(function (it) {
+              return it.type === "car";
+            })[0];
             driving = true;
-            carPos.x = cb.x;
-            carPos.y = cb.y;
+            carAngleFacing = carF.facing || "down";
+            carPos.x = cb.x + cb.w / 2;
+            carPos.y = cb.y + cb.h / 2;
             hidePrompt();
           }
         }
@@ -1025,54 +1046,69 @@
     ctx.fillRect(f.x, f.y, f.w, 16);
   }
 
-  function drawCar(x, y, w, h, facing) {
+  function drawCar(cx, cy, facing) {
     var bodyColor = "#e0433a";
+    var L = CAR_LENGTH;
+    var W = CAR_WIDTH;
+    var angle =
+      facing === "down" ? Math.PI
+      : facing === "left" ? -Math.PI / 2
+      : facing === "right" ? Math.PI / 2
+      : 0; // "up" is the drawn-facing default (nose points to -Y)
+
     ctx.save();
-    ctx.translate(x, y);
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    // from here on, the nose is always at local y = -L/2
 
-    groundShadow(w / 2 + 4, h + 6, w / 2 + 6, 10);
+    groundShadow(2, 4, W / 2 + 7, L / 2 + 3);
 
+    // chassis
     ctx.fillStyle = bodyColor;
-    ctx.fillRect(0, h * 0.2, w, h * 0.6);
+    ctx.fillRect(-W / 2, -L / 2 + 8, W, L - 8);
     ctx.fillStyle = shade(bodyColor, -0.28);
-    ctx.fillRect(0, h * 0.72, w, h * 0.08);
+    ctx.fillRect(-W / 2, L / 2 - 10, W, 10);
 
-    var cabinGrad = ctx.createLinearGradient(w * 0.2, 0, w * 0.8, h);
+    // cabin/roof, glossy left-to-right gradient
+    var cabinGrad = ctx.createLinearGradient(-W / 2, 0, W / 2, 0);
     cabinGrad.addColorStop(0, shade(bodyColor, 0.3));
     cabinGrad.addColorStop(0.5, bodyColor);
     cabinGrad.addColorStop(1, shade(bodyColor, -0.18));
     ctx.fillStyle = cabinGrad;
-    ctx.fillRect(w * 0.2, 0, w * 0.6, h);
+    ctx.fillRect(-W * 0.4, -L * 0.25, W * 0.8, L * 0.55);
 
-    var winGrad = ctx.createLinearGradient(w * 0.28, h * 0.15, w * 0.72, h * 0.43);
+    // windshield near the nose end of the cabin
+    var winGrad = ctx.createLinearGradient(0, -L * 0.22, 0, -L * 0.02);
     winGrad.addColorStop(0, "#eaf7ff");
     winGrad.addColorStop(1, "#7fb8e0");
     ctx.fillStyle = winGrad;
-    ctx.fillRect(w * 0.28, h * 0.15, w * 0.44, h * 0.28);
+    ctx.fillRect(-W * 0.32, -L * 0.22, W * 0.64, L * 0.2);
 
+    // wheels: front pair near the nose, rear pair near the tail
     [
-      [w * 0.18, 0],
-      [w * 0.82, 0],
-      [w * 0.18, h],
-      [w * 0.82, h],
+      [-W / 2, -L * 0.28],
+      [W / 2, -L * 0.28],
+      [-W / 2, L * 0.28],
+      [W / 2, L * 0.28],
     ].forEach(function (wheel) {
       ctx.fillStyle = "#1a1a1a";
       ctx.beginPath();
-      ctx.arc(wheel[0], wheel[1], 14, 0, Math.PI * 2);
+      ctx.arc(wheel[0], wheel[1], 11, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#666";
       ctx.beginPath();
-      ctx.arc(wheel[0] - 2, wheel[1] - 2, 5, 0, Math.PI * 2);
+      ctx.arc(wheel[0] - 1.5, wheel[1] - 1.5, 4, 0, Math.PI * 2);
       ctx.fill();
     });
+
     ctx.fillStyle = "#fff6b0";
-    if (facing === "up") {
-      ctx.fillRect(w * 0.15, 0, 10, 6);
-      ctx.fillRect(w * 0.75, 0, 10, 6);
-    } else if (facing === "down") {
-      ctx.fillRect(w * 0.15, h - 6, 10, 6);
-      ctx.fillRect(w * 0.75, h - 6, 10, 6);
-    }
+    ctx.fillRect(-W * 0.35, -L / 2, W * 0.18, 6);
+    ctx.fillRect(W * 0.17, -L / 2, W * 0.18, 6);
+
+    ctx.fillStyle = "#7a2119";
+    ctx.fillRect(-W * 0.35, L / 2 - 6, W * 0.18, 6);
+    ctx.fillRect(W * 0.17, L / 2 - 6, W * 0.18, 6);
+
     ctx.restore();
   }
 
@@ -1142,9 +1178,13 @@
 
   function currentLabel(scene) {
     if (scene.labelZones) {
-      var box = driving
-        ? { x: carPos.x, y: carPos.y, w: 200, h: 130 }
-        : playerBox(player);
+      var box;
+      if (driving) {
+        var dims = carDims(carAngleFacing);
+        box = { x: carPos.x - dims.w / 2, y: carPos.y - dims.h / 2, w: dims.w, h: dims.h };
+      } else {
+        box = playerBox(player);
+      }
       for (var i = 0; i < scene.labelZones.length; i++) {
         if (rectsOverlap(box, scene.labelZones[i])) {
           return scene.labelZones[i].text;
@@ -1223,7 +1263,7 @@
       else if (f.type === "block") drawBlock(f);
       else if (buildingTypes.indexOf(f.type) !== -1) drawBuilding(f);
       else if (f.type === "car" && !driving) {
-        drawCar(f.x, f.y, f.w, f.h, "down");
+        drawCar(f.x + f.w / 2, f.y + f.h / 2, f.facing || "down");
       }
     });
 
@@ -1234,7 +1274,7 @@
     }
 
     if (driving) {
-      drawCar(carPos.x, carPos.y, 200, 130, carAngleFacing);
+      drawCar(carPos.x, carPos.y, carAngleFacing);
     } else {
       drawPlayer(player);
     }
