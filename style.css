@@ -142,8 +142,29 @@ html, body {
 
 #inventory-list .inventory-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+#inventory-list .inventory-row span:first-child {
+  flex: 1;
+}
+
+#inventory-list .consume-btn {
+  background: rgba(255, 210, 60, 0.9);
+  border: none;
+  border-radius: 8px;
+  color: #402a00;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 12px;
+  pointer-events: auto;
+}
+
+#inventory-list .consume-btn:active {
+  background: rgba(255, 210, 60, 1);
 }
 
 #prompt {

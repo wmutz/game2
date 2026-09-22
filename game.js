@@ -101,6 +101,14 @@
   var inventoryBtn = document.getElementById("inventory-btn");
   var inventoryOpen = false;
 
+  var DRINK_WORDS = ["milkshake", "latte", "cappuccino", "hot chocolate"];
+  function verbFor(name) {
+    for (var i = 0; i < DRINK_WORDS.length; i++) {
+      if (name.indexOf(DRINK_WORDS[i]) !== -1) return "Drink";
+    }
+    return "Eat";
+  }
+
   function addToInventory(name) {
     for (var i = 0; i < inventory.length; i++) {
       if (inventory[i].name === name) {
@@ -109,6 +117,17 @@
       }
     }
     inventory.push({ name: name, count: 1 });
+  }
+
+  function consumeInventoryItem(index) {
+    var entry = inventory[index];
+    if (!entry) return;
+    entry.count--;
+    if (entry.count <= 0) inventory.splice(index, 1);
+    var verb = verbFor(entry.name);
+    orderMessage = "You " + (verb === "Drink" ? "drank" : "ate") + " " + entry.name + "!";
+    orderMessageTimer = 3;
+    renderInventory();
   }
 
   function renderInventory() {
@@ -123,7 +142,11 @@
         inventory[i].name +
         "</span><span>x" +
         inventory[i].count +
-        "</span></div>";
+        '</span><button class="consume-btn" data-index="' +
+        i +
+        '">' +
+        verbFor(inventory[i].name) +
+        "</button></div>";
     }
     inventoryList.innerHTML = html;
   }
@@ -144,6 +167,9 @@
   });
   inventoryPanel.addEventListener("pointerdown", function (e) {
     e.stopPropagation();
+    if (e.target.classList.contains("consume-btn")) {
+      consumeInventoryItem(parseInt(e.target.getAttribute("data-index"), 10));
+    }
   });
 
   window.addEventListener("keydown", function (e) {
