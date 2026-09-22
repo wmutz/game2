@@ -83,6 +83,69 @@ html, body {
   background: rgba(255, 210, 60, 1);
 }
 
+#inventory-btn {
+  position: absolute;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  top: max(60px, env(safe-area-inset-top, 0px) + 60px);
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+#inventory-btn:active {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+#inventory-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(320px, 80vw);
+  max-height: 70vh;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  padding: 16px;
+  pointer-events: auto;
+}
+
+#inventory-panel.hidden {
+  display: none;
+}
+
+#inventory-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+#inventory-list {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+#inventory-list .inventory-empty {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+#inventory-list .inventory-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 #prompt {
   position: absolute;
   left: 50%;

@@ -94,6 +94,65 @@
     interactPressed = true;
   });
 
+  // ---------- Inventory ----------
+  var inventory = []; // list of { name, count }, in the order first picked up
+  var inventoryPanel = document.getElementById("inventory-panel");
+  var inventoryList = document.getElementById("inventory-list");
+  var inventoryBtn = document.getElementById("inventory-btn");
+  var inventoryOpen = false;
+
+  function addToInventory(name) {
+    for (var i = 0; i < inventory.length; i++) {
+      if (inventory[i].name === name) {
+        inventory[i].count++;
+        return;
+      }
+    }
+    inventory.push({ name: name, count: 1 });
+  }
+
+  function renderInventory() {
+    if (inventory.length === 0) {
+      inventoryList.innerHTML = '<div class="inventory-empty">Nothing yet</div>';
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < inventory.length; i++) {
+      html +=
+        '<div class="inventory-row"><span>' +
+        inventory[i].name +
+        "</span><span>x" +
+        inventory[i].count +
+        "</span></div>";
+    }
+    inventoryList.innerHTML = html;
+  }
+
+  function setInventoryOpen(open) {
+    inventoryOpen = open;
+    if (open) {
+      renderInventory();
+      inventoryPanel.classList.remove("hidden");
+    } else {
+      inventoryPanel.classList.add("hidden");
+    }
+  }
+
+  inventoryBtn.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    setInventoryOpen(!inventoryOpen);
+  });
+  inventoryPanel.addEventListener("pointerdown", function (e) {
+    e.stopPropagation();
+  });
+
+  window.addEventListener("keydown", function (e) {
+    if (e.key.toLowerCase() === "i" || e.key === "Tab") {
+      e.preventDefault();
+      setInventoryOpen(!inventoryOpen);
+    }
+  });
+
   function getMoveVector() {
     var x = 0,
       y = 0;
@@ -905,6 +964,7 @@
             var item = cashier.menu[Math.floor(Math.random() * cashier.menu.length)];
             orderMessage = "Here's " + item + "! Enjoy.";
             orderMessageTimer = 3;
+            addToInventory(item);
             hidePrompt();
           }
         }
