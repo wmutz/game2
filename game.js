@@ -147,7 +147,7 @@
   });
 
   window.addEventListener("keydown", function (e) {
-    if (e.key.toLowerCase() === "i" || e.key === "Tab") {
+    if (e.key.toLowerCase() === "q") {
       e.preventDefault();
       setInventoryOpen(!inventoryOpen);
     }
