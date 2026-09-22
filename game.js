@@ -440,6 +440,24 @@
   ];
   var ROOM_EXIT_TRIGGER = { x: 400, y: 540, w: 160, h: 60 };
 
+  var dinerCashier = makeNpc({ x: 150, y: 50, w: 350, h: 20 }, 1, 35);
+  dinerCashier.menu = [
+    "a cheeseburger",
+    "a plate of fries",
+    "a chocolate milkshake",
+    "a slice of pie",
+    "a stack of pancakes",
+  ];
+
+  var cafeCashier = makeNpc({ x: 630, y: 50, w: 220, h: 20 }, 4, 35);
+  cafeCashier.menu = [
+    "a latte",
+    "a cappuccino",
+    "a croissant",
+    "a slice of cake",
+    "a hot chocolate",
+  ];
+
   scenes.diner = {
     bg: FLOOR_COLOR,
     walls: ROOM_WALLS,
@@ -464,7 +482,7 @@
       },
     ],
     label: "Diner",
-    npcs: [makeNpc({ x: 150, y: 50, w: 350, h: 20 }, 1, 35)],
+    npcs: [dinerCashier],
   };
 
   scenes.school = {
@@ -523,7 +541,7 @@
       },
     ],
     label: "Cafe",
-    npcs: [makeNpc({ x: 630, y: 50, w: 220, h: 20 }, 4, 35)],
+    npcs: [cafeCashier],
   };
 
   scenes.blueHouse = {
@@ -588,6 +606,10 @@
     ],
     label: "Backyard",
   };
+
+  // ---------- Ordering from a cashier ----------
+  var orderMessage = "";
+  var orderMessageTimer = 0;
 
   // ---------- Day/night clock ----------
   var DAY_LENGTH_SECONDS = 360; // one full day/night cycle, real seconds
@@ -689,6 +711,14 @@
 
   function update(dt) {
     gameHour = (gameHour + dt * HOURS_PER_SECOND) % 24;
+
+    if (orderMessageTimer > 0) {
+      orderMessageTimer -= dt;
+      if (orderMessageTimer <= 0) {
+        orderMessageTimer = 0;
+        orderMessage = "";
+      }
+    }
 
     if (sleeping) {
       updateSleepFade(dt);
@@ -846,6 +876,35 @@
             sleepTimer = 0;
             sleepFade = 0;
             sleepJumped = false;
+            hidePrompt();
+          }
+        }
+      }
+
+      if (!teleported && !shownPrompt && orderMessageTimer <= 0) {
+        var cashier =
+          scene.npcs &&
+          scene.npcs.filter(function (npc) {
+            return npc.menu;
+          })[0];
+        // the cashier wanders behind the counter, so the order zone covers
+        // the whole counter (its wander bounds) rather than its exact spot,
+        // extended toward the customer side so it's reachable across it
+        var nearCashier =
+          cashier &&
+          rectsOverlap(playerBox(player), {
+            x: cashier.bounds.x,
+            y: cashier.bounds.y,
+            w: cashier.bounds.w,
+            h: cashier.bounds.h + 150,
+          });
+        if (nearCashier) {
+          showPrompt("Tap A or press E to order");
+          shownPrompt = true;
+          if (interactPressed) {
+            var item = cashier.menu[Math.floor(Math.random() * cashier.menu.length)];
+            orderMessage = "Here's " + item + "! Enjoy.";
+            orderMessageTimer = 3;
             hidePrompt();
           }
         }
@@ -1462,6 +1521,20 @@
       28
     );
     ctx.textAlign = "left";
+
+    if (orderMessage) {
+      ctx.font = "bold 16px sans-serif";
+      var orderTextW = ctx.measureText(orderMessage).width;
+      var orderBoxW = orderTextW + 32;
+      var orderBoxX = VIEW_W / 2 - orderBoxW / 2;
+      var orderBoxY = 44;
+      ctx.fillStyle = "rgba(0,0,0,0.7)";
+      ctx.fillRect(orderBoxX, orderBoxY, orderBoxW, 32);
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.fillText(orderMessage, VIEW_W / 2, orderBoxY + 21);
+      ctx.textAlign = "left";
+    }
 
     if (sleepFade > 0) {
       ctx.fillStyle = "rgba(0,0,0," + sleepFade + ")";
