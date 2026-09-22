@@ -179,6 +179,55 @@
     }
   });
 
+  // ---------- Cashier menu ----------
+  var menuPanel = document.getElementById("menu-panel");
+  var menuTitle = document.getElementById("menu-title");
+  var menuList = document.getElementById("menu-list");
+  var menuCloseBtn = document.getElementById("menu-close-btn");
+  var menuOpen = false;
+  var activeCashier = null;
+
+  function renderMenu() {
+    if (!activeCashier) return;
+    var html = "";
+    for (var i = 0; i < activeCashier.menu.length; i++) {
+      html +=
+        '<div class="menu-row"><span>' +
+        activeCashier.menu[i] +
+        '</span><button class="order-btn" data-item="' +
+        activeCashier.menu[i] +
+        '">Order</button></div>';
+    }
+    menuList.innerHTML = html;
+  }
+
+  function openMenu(cashier) {
+    activeCashier = cashier;
+    menuOpen = true;
+    menuTitle.textContent = (cashier.place || "Menu") + " Menu";
+    renderMenu();
+    menuPanel.classList.remove("hidden");
+    hidePrompt();
+  }
+
+  function closeMenu() {
+    menuOpen = false;
+    activeCashier = null;
+    menuPanel.classList.add("hidden");
+  }
+
+  menuPanel.addEventListener("pointerdown", function (e) {
+    e.stopPropagation();
+    if (e.target === menuCloseBtn) {
+      closeMenu();
+    } else if (e.target.classList.contains("order-btn")) {
+      var item = e.target.getAttribute("data-item");
+      orderMessage = "Here's " + item + "! Enjoy.";
+      orderMessageTimer = 3;
+      addToInventory(item);
+    }
+  });
+
   function getMoveVector() {
     var x = 0,
       y = 0;
@@ -526,6 +575,7 @@
   var ROOM_EXIT_TRIGGER = { x: 400, y: 540, w: 160, h: 60 };
 
   var dinerCashier = makeNpc({ x: 150, y: 50, w: 350, h: 20 }, 1, 35);
+  dinerCashier.place = "Diner";
   dinerCashier.menu = [
     "a cheeseburger",
     "a plate of fries",
@@ -535,6 +585,7 @@
   ];
 
   var cafeCashier = makeNpc({ x: 630, y: 50, w: 220, h: 20 }, 4, 35);
+  cafeCashier.place = "Cafe";
   cafeCashier.menu = [
     "a latte",
     "a cappuccino",
@@ -966,7 +1017,7 @@
         }
       }
 
-      if (!teleported && !shownPrompt && orderMessageTimer <= 0) {
+      if (!teleported && orderMessageTimer <= 0) {
         var cashier =
           scene.npcs &&
           scene.npcs.filter(function (npc) {
@@ -983,15 +1034,13 @@
             w: cashier.bounds.w,
             h: cashier.bounds.h + 150,
           });
-        if (nearCashier) {
-          showPrompt("Tap A or press E to order");
+        if (menuOpen && activeCashier === cashier) {
+          if (!nearCashier) closeMenu();
+        } else if (!shownPrompt && nearCashier) {
+          showPrompt("Tap A or press E to see the menu");
           shownPrompt = true;
           if (interactPressed) {
-            var item = cashier.menu[Math.floor(Math.random() * cashier.menu.length)];
-            orderMessage = "Here's " + item + "! Enjoy.";
-            orderMessageTimer = 3;
-            addToInventory(item);
-            hidePrompt();
+            openMenu(cashier);
           }
         }
       }
