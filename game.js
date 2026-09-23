@@ -29,18 +29,28 @@
   var keys = {};
   var interactPressed = false;
   var interactHeld = false;
+  var jumpPressed = false;
+  var jumpHeld = false;
 
   window.addEventListener("keydown", function (e) {
     keys[e.key.toLowerCase()] = true;
-    if (e.key === " " || e.key.toLowerCase() === "e" || e.key === "Enter") {
+    if (e.key.toLowerCase() === "e" || e.key === "Enter") {
       if (!interactHeld) interactPressed = true;
       interactHeld = true;
+    }
+    if (e.key === " ") {
+      e.preventDefault();
+      if (!jumpHeld) jumpPressed = true;
+      jumpHeld = true;
     }
   });
   window.addEventListener("keyup", function (e) {
     keys[e.key.toLowerCase()] = false;
-    if (e.key === " " || e.key.toLowerCase() === "e" || e.key === "Enter") {
+    if (e.key.toLowerCase() === "e" || e.key === "Enter") {
       interactHeld = false;
+    }
+    if (e.key === " ") {
+      jumpHeld = false;
     }
   });
 
@@ -310,6 +320,11 @@
     facing: "down",
     moving: false,
   };
+
+  var jumping = false;
+  var jumpTimer = 0;
+  var JUMP_DURATION = 0.45;
+  var JUMP_HEIGHT = 20;
 
   var PLAYER_PALETTE = { shirt: "#3aa76d", hair: "#4a3524", pants: "#2f3e6b", skin: "#f2c29c" };
   var NPC_PALETTES = [
@@ -761,6 +776,8 @@
   var sleepFade = 0;
   var sleepJumped = false;
 
+  var sitting = false;
+
   function nightAmount() {
     var h = gameHour;
     if (h >= 7 && h <= 17) return 0;
@@ -870,9 +887,18 @@
       }
     }
 
+    if (jumping) {
+      jumpTimer -= dt;
+      if (jumpTimer <= 0) {
+        jumping = false;
+        jumpTimer = 0;
+      }
+    }
+
     if (sleeping) {
       updateSleepFade(dt);
       interactPressed = false;
+      jumpPressed = false;
       return;
     }
 
@@ -885,7 +911,13 @@
       });
     }
 
-    if (driving) {
+    if (sitting) {
+      showPrompt("Tap A or press E to stand up");
+      if (interactPressed) {
+        sitting = false;
+        hidePrompt();
+      }
+    } else if (driving) {
       var speed = 320;
       if (mv.x !== 0 || mv.y !== 0) {
         carAngleFacing = Math.abs(mv.x) > Math.abs(mv.y)
@@ -917,6 +949,11 @@
         driving = false;
       }
     } else {
+      if (jumpPressed && !jumping) {
+        jumping = true;
+        jumpTimer = JUMP_DURATION;
+      }
+
       player.moving = mv.x !== 0 || mv.y !== 0;
       if (player.moving) {
         if (Math.abs(mv.x) > Math.abs(mv.y)) {
@@ -1031,6 +1068,28 @@
         }
       }
 
+      if (!teleported && !shownPrompt && scene.decor) {
+        var nearStool = null;
+        for (var si = 0; si < scene.decor.length; si++) {
+          var d = scene.decor[si];
+          if (d.type !== "stool") continue;
+          if (rectsOverlap(pbox, { x: d.x - 15, y: d.y - 15, w: 30, h: 30 })) {
+            nearStool = d;
+            break;
+          }
+        }
+        if (nearStool) {
+          showPrompt("Tap A or press E to sit down");
+          shownPrompt = true;
+          if (interactPressed) {
+            sitting = true;
+            player.x = nearStool.x;
+            player.y = nearStool.y;
+            hidePrompt();
+          }
+        }
+      }
+
       if (!teleported && orderMessageTimer <= 0 && !pendingOrder) {
         var cashier =
           scene.npcs &&
@@ -1063,6 +1122,7 @@
     }
 
     interactPressed = false;
+    jumpPressed = false;
   }
 
   function collidesWalls(box, scene, isCar) {
@@ -1468,16 +1528,18 @@
     ctx.restore();
   }
 
-  function drawPerson(p, palette) {
+  function drawPerson(p, palette, liftY) {
     var pal = palette || PLAYER_PALETTE;
     ctx.save();
     ctx.translate(p.x, p.y);
 
-    // shadow
+    // shadow stays on the ground even while the person is hopping
     ctx.fillStyle = "rgba(0,0,0,0.28)";
     ctx.beginPath();
     ctx.ellipse(1, p.h / 2, p.w / 2 + 1, 6, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    if (liftY) ctx.translate(0, -liftY);
 
     var bob = p.moving ? Math.sin(Date.now() / 90 + (p.bobOffset || 0)) * 2 : 0;
 
@@ -1529,7 +1591,12 @@
   }
 
   function drawPlayer(p) {
-    drawPerson(p, PLAYER_PALETTE);
+    var liftY = 0;
+    if (jumping) {
+      var t = 1 - jumpTimer / JUMP_DURATION;
+      liftY = Math.sin(t * Math.PI) * JUMP_HEIGHT;
+    }
+    drawPerson(p, PLAYER_PALETTE, liftY);
   }
 
   function currentLabel(scene) {
