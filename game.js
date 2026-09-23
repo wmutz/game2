@@ -186,6 +186,8 @@
   var menuCloseBtn = document.getElementById("menu-close-btn");
   var menuOpen = false;
   var activeCashier = null;
+  var pendingOrder = null; // { item, timer } while the cashier is getting it ready
+  var ORDER_WAIT_SECONDS = 3;
 
   function renderMenu() {
     if (!activeCashier) return;
@@ -196,7 +198,9 @@
         activeCashier.menu[i] +
         '</span><button class="order-btn" data-item="' +
         activeCashier.menu[i] +
-        '">Order</button></div>';
+        '">' +
+        (i + 1) +
+        "</button></div>";
     }
     menuList.innerHTML = html;
   }
@@ -220,11 +224,11 @@
     e.stopPropagation();
     if (e.target === menuCloseBtn) {
       closeMenu();
-    } else if (e.target.classList.contains("order-btn")) {
+    } else if (e.target.classList.contains("order-btn") && !pendingOrder) {
       var item = e.target.getAttribute("data-item");
-      orderMessage = "Here's " + item + "! Enjoy.";
-      orderMessageTimer = 3;
-      addToInventory(item);
+      pendingOrder = { item: item, timer: ORDER_WAIT_SECONDS };
+      orderMessage = "Getting " + item + " ready...";
+      closeMenu();
     }
   });
 
@@ -856,6 +860,16 @@
       }
     }
 
+    if (pendingOrder) {
+      pendingOrder.timer -= dt;
+      if (pendingOrder.timer <= 0) {
+        addToInventory(pendingOrder.item);
+        orderMessage = "Here's " + pendingOrder.item + "! Enjoy.";
+        orderMessageTimer = 3;
+        pendingOrder = null;
+      }
+    }
+
     if (sleeping) {
       updateSleepFade(dt);
       interactPressed = false;
@@ -1017,7 +1031,7 @@
         }
       }
 
-      if (!teleported && orderMessageTimer <= 0) {
+      if (!teleported && orderMessageTimer <= 0 && !pendingOrder) {
         var cashier =
           scene.npcs &&
           scene.npcs.filter(function (npc) {
