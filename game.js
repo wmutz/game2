@@ -479,29 +479,29 @@
   scenes.frontyard = {
     bg: "#7ec850",
     sky: true,
-    worldW: 1700,
+    worldW: 1900,
     worldH: 1300,
     zones: [
       // sidewalks first, road surface drawn on top so it wins at the corner
       { x: 660, y: 170, w: 40, h: 830, color: "#c9c9c9" },
       { x: 900, y: 170, w: 40, h: 830, color: "#c9c9c9" },
-      { x: 700, y: 760, w: 960, h: 40, color: "#c9c9c9" },
-      { x: 700, y: 1000, w: 960, h: 40, color: "#c9c9c9" },
+      { x: 700, y: 760, w: 1160, h: 40, color: "#c9c9c9" },
+      { x: 700, y: 1000, w: 1160, h: 40, color: "#c9c9c9" },
       { x: 700, y: 170, w: 200, h: 830, color: "#454545" },
-      { x: 700, y: 800, w: 960, h: 200, color: "#454545" },
+      { x: 700, y: 800, w: 1160, h: 200, color: "#454545" },
     ],
     roadLines: [
       { orientation: "v", pos: 800, from: 170, to: 800 },
-      { orientation: "h", pos: 900, from: 900, to: 1660 },
+      { orientation: "h", pos: 900, from: 900, to: 1860 },
     ],
     walls: [
       // top wall = edge of the property, gap for the front door
       { x: 0, y: 0, w: 700, h: 40 },
       { x: 900, y: 0, w: 700, h: 40 },
       // world boundary
-      { x: 0, y: 1260, w: 1700, h: 40 },
+      { x: 0, y: 1260, w: 1900, h: 40 },
       { x: 0, y: 0, w: 40, h: 1300 },
-      { x: 1660, y: 0, w: 40, h: 1300 },
+      { x: 1860, y: 0, w: 40, h: 1300 },
     ],
     furniture: [
       { x: 440, y: 280, w: 200, h: 120, type: "neighborhouse", color: "#7d9fc9" },
@@ -509,6 +509,7 @@
       { x: 960, y: 560, w: 180, h: 190, type: "diner", color: "#e0a63a", label: "DINER" },
       { x: 1160, y: 560, w: 260, h: 190, type: "school", color: "#c96b5a", label: "SCHOOL" },
       { x: 1440, y: 560, w: 170, h: 190, type: "cafe", color: "#8a6fb0", label: "CAFE" },
+      { x: 1630, y: 560, w: 180, h: 190, type: "newspaper", color: "#5c6b7a", label: "NEWSPAPER" },
       { x: 718, y: 189, w: 64, h: 112, type: "car", facing: "down" },
     ],
     decor: [
@@ -526,6 +527,7 @@
       { type: "streetlamp", x: 1150, y: 785 },
       { type: "streetlamp", x: 1420, y: 785 },
       { type: "streetlamp", x: 1620, y: 785 },
+      { type: "streetlamp", x: 1830, y: 785 },
       { type: "tree", x: 1050, y: 1100 },
       { type: "tree", x: 1300, y: 1150 },
     ],
@@ -557,6 +559,13 @@
         spawn: { x: 480, y: 470, facing: "down" },
       },
       {
+        trigger: { x: 1670, y: 750, w: 100, h: 40 },
+        target: "newspaper",
+        interact: true,
+        prompt: "Tap A or press E to go into the newspaper office",
+        spawn: { x: 480, y: 470, facing: "down" },
+      },
+      {
         trigger: { x: 490, y: 400, w: 100, h: 40 },
         target: "blueHouse",
         interact: true,
@@ -572,14 +581,14 @@
       },
     ],
     labelZones: [
-      { x: 0, y: 0, w: 1700, h: 760, text: "Elm Avenue" },
+      { x: 0, y: 0, w: 1900, h: 760, text: "Elm Avenue" },
     ],
     label: "Main Street",
     npcs: [
       makeNpc({ x: 670, y: 280, w: 20, h: 440 }, 0, 55, { x: 540, y: 415 }),
       makeNpc({ x: 910, y: 280, w: 20, h: 440 }, 1, 65, { x: 1060, y: 415 }),
       makeNpc({ x: 720, y: 770, w: 400, h: 20 }, 2, 60, { x: 1050, y: 770 }),
-      makeNpc({ x: 1150, y: 770, w: 480, h: 20 }, 3, 50, { x: 1525, y: 770 }),
+      makeNpc({ x: 1150, y: 770, w: 680, h: 20 }, 3, 50, { x: 1525, y: 770 }),
       makeNpc({ x: 720, y: 1010, w: 900, h: 20 }, 4, 70),
     ],
   };
@@ -699,6 +708,27 @@
     npcs: [cafeCashier],
   };
 
+  var newsEditor = makeNpc({ x: 150, y: 50, w: 350, h: 20 }, 3, 35);
+
+  scenes.newspaper = {
+    bg: FLOOR_COLOR,
+    walls: ROOM_WALLS,
+    furniture: [
+      { x: 80, y: 80, w: 500, h: 60, type: "block", color: "#5c6b7a", accent: "#d7dee5" },
+      { x: 700, y: 120, w: 70, h: 90, type: "block", color: "#3c4a5c" },
+      { x: 700, y: 320, w: 70, h: 90, type: "block", color: "#3c4a5c" },
+    ],
+    doors: [
+      {
+        trigger: ROOM_EXIT_TRIGGER,
+        target: "frontyard",
+        spawn: { x: 1720, y: 780, facing: "down" },
+      },
+    ],
+    label: "Newspaper Office",
+    npcs: [newsEditor],
+  };
+
   scenes.blueHouse = {
     bg: FLOOR_COLOR,
     walls: ROOM_WALLS,
@@ -765,6 +795,13 @@
   // ---------- Ordering from a cashier ----------
   var orderMessage = "";
   var orderMessageTimer = 0;
+
+  // ---------- Newspaper delivery job ----------
+  var money = 0;
+  var newspaperCount = 0;
+  var deliveredHouses = {};
+  var NEWSPAPERS_PER_RUN = 2;
+  var PAY_PER_DELIVERY = 5;
 
   // ---------- Day/night clock ----------
   var DAY_LENGTH_SECONDS = 360; // one full day/night cycle, real seconds
@@ -1010,12 +1047,29 @@
           if (!nearDoor && rectsOverlap(pbox, door.trigger)) nearDoor = door;
         });
         if (nearDoor) {
-          showPrompt(nearDoor.prompt);
-          shownPrompt = true;
-          if (interactPressed) {
-            changeScene(nearDoor.target, nearDoor.spawn);
-            teleported = true;
-            hidePrompt();
+          var isDeliveryStop =
+            (nearDoor.target === "blueHouse" || nearDoor.target === "yellowHouse") &&
+            newspaperCount > 0 &&
+            !deliveredHouses[nearDoor.target];
+          if (isDeliveryStop) {
+            showPrompt("Tap A or press E to deliver a newspaper");
+            shownPrompt = true;
+            if (interactPressed) {
+              newspaperCount--;
+              deliveredHouses[nearDoor.target] = true;
+              money += PAY_PER_DELIVERY;
+              orderMessage = "Delivered a newspaper! +$" + PAY_PER_DELIVERY;
+              orderMessageTimer = 3;
+              hidePrompt();
+            }
+          } else {
+            showPrompt(nearDoor.prompt);
+            shownPrompt = true;
+            if (interactPressed) {
+              changeScene(nearDoor.target, nearDoor.spawn);
+              teleported = true;
+              hidePrompt();
+            }
           }
         }
       }
@@ -1114,6 +1168,29 @@
           shownPrompt = true;
           if (interactPressed) {
             openMenu(cashier);
+          }
+        }
+      }
+
+      if (!teleported && !shownPrompt && currentSceneKey === "newspaper") {
+        var nearEditor = rectsOverlap(playerBox(player), {
+          x: newsEditor.bounds.x,
+          y: newsEditor.bounds.y,
+          w: newsEditor.bounds.w,
+          h: newsEditor.bounds.h + 150,
+        });
+        if (nearEditor) {
+          if (newspaperCount > 0) {
+            showPrompt("Deliver your newspapers first!");
+          } else {
+            showPrompt("Tap A or press E for newspapers to deliver");
+          }
+          shownPrompt = true;
+          if (interactPressed && newspaperCount === 0) {
+            newspaperCount = NEWSPAPERS_PER_RUN;
+            deliveredHouses = {};
+            orderMessage = "Got " + NEWSPAPERS_PER_RUN + " newspapers to deliver!";
+            orderMessageTimer = 3;
           }
         }
       }
@@ -1678,7 +1755,7 @@
 
     scene.walls.forEach(drawWall);
 
-    var buildingTypes = ["neighborhouse", "school", "diner", "cafe"];
+    var buildingTypes = ["neighborhouse", "school", "diner", "cafe", "newspaper"];
     scene.furniture.forEach(function (f) {
       if (f.type === "bed") drawBed(f);
       else if (f.type === "tv") drawTV(f);
@@ -1735,6 +1812,11 @@
       formatTime(gameHour) + (nightAmount() > 0.4 ? " 🌙" : " ☀️"),
       VIEW_W - 16,
       28
+    );
+    ctx.fillText(
+      "$" + money + (newspaperCount > 0 ? "   📰 x" + newspaperCount : ""),
+      VIEW_W - 16,
+      50
     );
     ctx.textAlign = "left";
 
