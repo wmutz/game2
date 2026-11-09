@@ -821,19 +821,198 @@
   var sleepTimer = 0;
   var sleepFade = 0;
   var sleepJumped = false;
-  var dreamText = "";
+  var dream = null;
 
-  var DREAM_TEXTS = [
-    "You dreamt you could fly over the whole town.",
-    "You dreamt you turned into a giant newspaper.",
-    "You dreamt the cashier gave you free food forever.",
-    "You dreamt you were driving the car... upside down.",
-    "You dreamt the whole town was made of cake.",
-    "You dreamt you could talk to the squirrels.",
-    "You dreamt your bed turned into a hot air balloon.",
-    "You dreamt you delivered newspapers to the moon.",
-    "You dreamt the diner stools came alive and danced.",
-    "You dreamt you were as tall as the school building.",
+  function drawDreamBubble(cx, cy) {
+    ctx.fillStyle = "rgba(255,255,255,0.14)";
+    [
+      [cx - 40, cy + 6, 26],
+      [cx - 10, cy - 10, 34],
+      [cx + 28, cy + 2, 30],
+      [cx, cy + 20, 40],
+    ].forEach(function (c) {
+      ctx.beginPath();
+      ctx.arc(c[0], c[1], c[2], 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  var DREAMS = [
+    {
+      text: "You dreamt you could fly over the whole town.",
+      draw: function (cx, cy) {
+        ctx.fillStyle = "#fff";
+        [-20, 0, 22].forEach(function (dx, i) {
+          ctx.beginPath();
+          ctx.arc(cx + dx, cy - 18 - (i === 1 ? 6 : 0), 16, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        [-28, -4, 20].forEach(function (dx, i) {
+          var h = 16 + (i % 2) * 6;
+          ctx.fillStyle = i === 1 ? "#d9a865" : "#e0433a";
+          ctx.fillRect(cx + dx, cy + 16, 18, h);
+          ctx.fillStyle = "#6b4a36";
+          ctx.beginPath();
+          ctx.moveTo(cx + dx - 3, cy + 16);
+          ctx.lineTo(cx + dx + 9, cy + 4);
+          ctx.lineTo(cx + dx + 21, cy + 16);
+          ctx.closePath();
+          ctx.fill();
+        });
+      },
+    },
+    {
+      text: "You dreamt you turned into a giant newspaper.",
+      draw: function (cx, cy) {
+        ctx.fillStyle = "#f2ead8";
+        ctx.fillRect(cx - 38, cy - 32, 76, 64);
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 32);
+        ctx.lineTo(cx, cy + 32);
+        ctx.stroke();
+        ctx.fillStyle = "#8a8070";
+        ctx.fillRect(cx - 30, cy - 22, 22, 6);
+        [-10, 0, 10, 20].forEach(function (dy) {
+          ctx.fillRect(cx - 30, cy - 8 + dy, 22, 3);
+          ctx.fillRect(cx + 8, cy - 8 + dy, 22, 3);
+        });
+      },
+    },
+    {
+      text: "You dreamt the cashier gave you free food forever.",
+      draw: function (cx, cy) {
+        ctx.fillStyle = "#e0a63a";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14, 26, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = "#6b9e4a";
+        ctx.fillRect(cx - 26, cy - 6, 52, 7);
+        ctx.fillStyle = "#8a5a34";
+        ctx.fillRect(cx - 26, cy, 52, 8);
+        ctx.fillStyle = "#e0a63a";
+        ctx.fillRect(cx - 26, cy + 10, 52, 10);
+      },
+    },
+    {
+      text: "You dreamt you were driving the car... upside down.",
+      draw: function (cx, cy) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(Math.PI);
+        ctx.translate(-cx, -cy);
+        drawCar(cx, cy, "up");
+        ctx.restore();
+      },
+    },
+    {
+      text: "You dreamt the whole town was made of cake.",
+      draw: function (cx, cy) {
+        ctx.fillStyle = "#9d6b4a";
+        ctx.fillRect(cx - 34, cy + 6, 68, 20);
+        ctx.fillStyle = "#e9a9c2";
+        ctx.fillRect(cx - 28, cy - 12, 56, 18);
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(cx - 28, cy - 14, 56, 4);
+        ctx.fillStyle = "#e0433a";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 20, 6, 0, Math.PI * 2);
+        ctx.fill();
+      },
+    },
+    {
+      text: "You dreamt you could talk to the squirrels.",
+      draw: function (cx, cy) {
+        ctx.fillStyle = "#9d7049";
+        ctx.beginPath();
+        ctx.ellipse(cx + 20, cy - 10, 20, 14, -0.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx - 8, cy + 6, 16, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx - 18, cy + 4);
+        ctx.lineTo(cx - 12, cy - 6);
+        ctx.lineTo(cx - 20, cy - 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#2b2b2b";
+        ctx.beginPath();
+        ctx.arc(cx - 15, cy + 3, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      },
+    },
+    {
+      text: "You dreamt your bed turned into a hot air balloon.",
+      draw: function (cx, cy) {
+        var grad = ctx.createRadialGradient(cx - 6, cy - 16, 4, cx, cy - 10, 28);
+        grad.addColorStop(0, "#f2cc8f");
+        grad.addColorStop(1, "#e0433a");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 10, 26, 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - 14, cy + 14);
+        ctx.lineTo(cx - 8, cy + 26);
+        ctx.moveTo(cx + 14, cy + 14);
+        ctx.lineTo(cx + 8, cy + 26);
+        ctx.stroke();
+        ctx.fillStyle = "#8a5a34";
+        ctx.fillRect(cx - 10, cy + 26, 20, 12);
+      },
+    },
+    {
+      text: "You dreamt you delivered newspapers to the moon.",
+      draw: function (cx, cy) {
+        ctx.fillStyle = "#f2e9b8";
+        ctx.beginPath();
+        ctx.arc(cx + 10, cy - 8, 26, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.beginPath();
+        ctx.arc(cx + 22, cy - 8, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#f2ead8";
+        ctx.fillRect(cx - 34, cy + 14, 30, 22);
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.lineWidth = 1;
+        [20, 26, 32].forEach(function (dy) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 30, cy + dy);
+          ctx.lineTo(cx - 8, cy + dy);
+          ctx.stroke();
+        });
+      },
+    },
+    {
+      text: "You dreamt the diner stools came alive and danced.",
+      draw: function (cx, cy) {
+        drawStool(cx - 28, cy + 14);
+        drawStool(cx, cy - 10);
+        drawStool(cx + 28, cy + 14);
+      },
+    },
+    {
+      text: "You dreamt you were as tall as the school building.",
+      draw: function (cx, cy) {
+        ctx.fillStyle = "#c96b5a";
+        ctx.fillRect(cx - 42, cy, 34, 30);
+        ctx.fillStyle = "#8fc7ea";
+        ctx.fillRect(cx - 35, cy + 8, 8, 8);
+        ctx.fillStyle = "#f2c29c";
+        ctx.beginPath();
+        ctx.arc(cx + 14, cy - 24, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#3aa76d";
+        ctx.fillRect(cx + 5, cy - 16, 18, 34);
+        ctx.fillStyle = "#2f3e6b";
+        ctx.fillRect(cx + 5, cy + 10, 18, 10);
+      },
+    },
   ];
 
   var sitting = false;
@@ -1140,7 +1319,7 @@
             sleepTimer = 0;
             sleepFade = 0;
             sleepJumped = false;
-            dreamText = DREAM_TEXTS[Math.floor(Math.random() * DREAM_TEXTS.length)];
+            dream = DREAMS[Math.floor(Math.random() * DREAMS.length)];
             hidePrompt();
           }
         }
@@ -1861,15 +2040,18 @@
     if (sleepFade > 0) {
       ctx.fillStyle = "rgba(0,0,0," + sleepFade + ")";
       ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-      if (sleepFade > 0.6) {
+      if (sleepFade > 0.6 && dream) {
+        var dreamCx = VIEW_W / 2;
+        var dreamCy = VIEW_H / 2 - 90;
+        drawDreamBubble(dreamCx, dreamCy);
+        dream.draw(dreamCx, dreamCy);
+
         ctx.fillStyle = "rgba(255,255,255,0.85)";
         ctx.font = "bold 26px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("Zzz...", VIEW_W / 2, VIEW_H / 2 - 20);
-        if (dreamText) {
-          ctx.font = "bold 18px sans-serif";
-          ctx.fillText(dreamText, VIEW_W / 2, VIEW_H / 2 + 20);
-        }
+        ctx.fillText("Zzz...", VIEW_W / 2, VIEW_H / 2 + 20);
+        ctx.font = "bold 18px sans-serif";
+        ctx.fillText(dream.text, VIEW_W / 2, VIEW_H / 2 + 52);
         ctx.textAlign = "left";
       }
     }
