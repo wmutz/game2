@@ -824,16 +824,56 @@
   var dream = null;
 
   function drawDreamBubble(cx, cy) {
-    ctx.fillStyle = "rgba(255,255,255,0.14)";
+    ctx.fillStyle = "rgba(120,170,230,0.16)";
+    ctx.beginPath();
+    ctx.arc(cx, cy + 6, 58, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.16)";
     [
-      [cx - 40, cy + 6, 26],
-      [cx - 10, cy - 10, 34],
-      [cx + 28, cy + 2, 30],
-      [cx, cy + 20, 40],
+      [cx - 46, cy + 8, 28],
+      [cx - 14, cy - 14, 38],
+      [cx + 32, cy + 2, 32],
+      [cx + 6, cy + 24, 42],
+      [cx - 34, cy - 24, 20],
     ].forEach(function (c) {
       ctx.beginPath();
       ctx.arc(c[0], c[1], c[2], 0, Math.PI * 2);
       ctx.fill();
+    });
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy + 6, 58, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  function drawSparkles(cx, cy, spots) {
+    spots.forEach(function (s) {
+      ctx.save();
+      ctx.translate(cx + s[0], cy + s[1]);
+      var glow = ctx.createRadialGradient(0, 0, 0, 0, 0, s[2] * 1.8);
+      glow.addColorStop(0, "rgba(255,246,200,0.8)");
+      glow.addColorStop(1, "rgba(255,246,200,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(0, 0, s[2] * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fffdf2";
+      ctx.beginPath();
+      ctx.moveTo(0, -s[2]);
+      ctx.lineTo(s[2] * 0.32, 0);
+      ctx.lineTo(0, s[2]);
+      ctx.lineTo(-s[2] * 0.32, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-s[2] * 0.6, 0);
+      ctx.lineTo(0, -s[2] * 0.18);
+      ctx.lineTo(s[2] * 0.6, 0);
+      ctx.lineTo(0, s[2] * 0.18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     });
   }
 
@@ -841,58 +881,186 @@
     {
       text: "You dreamt you could fly over the whole town.",
       draw: function (cx, cy) {
-        ctx.fillStyle = "#fff";
-        [-20, 0, 22].forEach(function (dx, i) {
+        var sunGlow = ctx.createRadialGradient(cx + 32, cy - 40, 2, cx + 32, cy - 40, 20);
+        sunGlow.addColorStop(0, "rgba(255,230,140,0.9)");
+        sunGlow.addColorStop(1, "rgba(255,230,140,0)");
+        ctx.fillStyle = sunGlow;
+        ctx.beginPath();
+        ctx.arc(cx + 32, cy - 40, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffe98a";
+        ctx.beginPath();
+        ctx.arc(cx + 32, cy - 40, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        [-26, 24].forEach(function (dx) {
+          ctx.strokeStyle = "rgba(255,255,255,0.9)";
+          ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.arc(cx + dx, cy - 18 - (i === 1 ? 6 : 0), 16, 0, Math.PI * 2);
+          ctx.moveTo(cx + dx - 6, cy - 34);
+          ctx.quadraticCurveTo(cx + dx, cy - 40, cx + dx + 6, cy - 34);
+          ctx.moveTo(cx + dx + 2, cy - 34);
+          ctx.quadraticCurveTo(cx + dx + 8, cy - 40, cx + dx + 14, cy - 34);
+          ctx.stroke();
+        });
+
+        [-24, 2, 28].forEach(function (dx, i) {
+          var r = i === 1 ? 19 : 15;
+          var puffY = cy - 14 - (i === 1 ? 6 : 0);
+          var grad = ctx.createRadialGradient(cx + dx - 4, puffY - 4, 1, cx + dx, puffY, r);
+          grad.addColorStop(0, "#ffffff");
+          grad.addColorStop(1, "#dce6ef");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(cx + dx, puffY, r, 0, Math.PI * 2);
+          ctx.arc(cx + dx - r * 0.6, puffY + 4, r * 0.7, 0, Math.PI * 2);
+          ctx.arc(cx + dx + r * 0.6, puffY + 4, r * 0.7, 0, Math.PI * 2);
           ctx.fill();
         });
-        [-28, -4, 20].forEach(function (dx, i) {
-          var h = 16 + (i % 2) * 6;
-          ctx.fillStyle = i === 1 ? "#d9a865" : "#e0433a";
-          ctx.fillRect(cx + dx, cy + 16, 18, h);
-          ctx.fillStyle = "#6b4a36";
+
+        ctx.fillStyle = shade("#6b9e4a", -0.1);
+        ctx.fillRect(cx - 46, cy + 30, 92, 6);
+
+        [-30, -2, 26].forEach(function (dx, i) {
+          var w = 20,
+            h = 18 + (i % 2) * 6;
+          var wallColor = i === 1 ? "#d9a865" : "#e0433a";
+          var wallGrad = ctx.createLinearGradient(cx + dx, 0, cx + dx + w, 0);
+          wallGrad.addColorStop(0, shade(wallColor, -0.2));
+          wallGrad.addColorStop(1, shade(wallColor, 0.1));
+          ctx.fillStyle = wallGrad;
+          ctx.fillRect(cx + dx, cy + 30 - h, w, h);
+
+          ctx.fillStyle = shade("#6b4a36", 0.1);
           ctx.beginPath();
-          ctx.moveTo(cx + dx - 3, cy + 16);
-          ctx.lineTo(cx + dx + 9, cy + 4);
-          ctx.lineTo(cx + dx + 21, cy + 16);
+          ctx.moveTo(cx + dx - 4, cy + 30 - h);
+          ctx.lineTo(cx + dx + w / 2, cy + 30 - h - 13);
+          ctx.lineTo(cx + dx + w + 4, cy + 30 - h);
           ctx.closePath();
           ctx.fill();
+
+          ctx.fillStyle = "#8fc7ea";
+          ctx.fillRect(cx + dx + w / 2 - 3, cy + 30 - h / 2, 6, 6);
+          ctx.fillStyle = "#3a2a1f";
+          ctx.fillRect(cx + dx + 3, cy + 30 - 8, 5, 8);
         });
       },
     },
     {
       text: "You dreamt you turned into a giant newspaper.",
       draw: function (cx, cy) {
-        ctx.fillStyle = "#f2ead8";
-        ctx.fillRect(cx - 38, cy - 32, 76, 64);
-        ctx.strokeStyle = "rgba(0,0,0,0.3)";
-        ctx.lineWidth = 2;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-0.05);
+        groundShadow(2, 36, 36, 6);
+        var paperGrad = ctx.createLinearGradient(-40, 0, 40, 0);
+        paperGrad.addColorStop(0, shade("#f2ead8", -0.08));
+        paperGrad.addColorStop(0.5, "#f8f2e4");
+        paperGrad.addColorStop(1, shade("#f2ead8", -0.08));
+        ctx.fillStyle = paperGrad;
+        ctx.fillRect(-40, -34, 80, 68);
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-40, -34, 80, 68);
+
+        ctx.fillStyle = "#2b2b2b";
+        ctx.font = "bold 10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("DAILY NEWS", 0, -24);
+        ctx.textAlign = "left";
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(cx, cy - 32);
-        ctx.lineTo(cx, cy + 32);
+        ctx.moveTo(-32, -18);
+        ctx.lineTo(32, -18);
         ctx.stroke();
+
+        ctx.strokeStyle = "rgba(0,0,0,0.25)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, -16);
+        ctx.lineTo(0, 32);
+        ctx.stroke();
+
+        ctx.fillStyle = "#9aa3ab";
+        ctx.fillRect(-32, -12, 24, 18);
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath();
+        ctx.moveTo(-32, -12);
+        ctx.lineTo(-8, 6);
+        ctx.moveTo(-8, -12);
+        ctx.lineTo(-32, 6);
+        ctx.stroke();
+
         ctx.fillStyle = "#8a8070";
-        ctx.fillRect(cx - 30, cy - 22, 22, 6);
-        [-10, 0, 10, 20].forEach(function (dy) {
-          ctx.fillRect(cx - 30, cy - 8 + dy, 22, 3);
-          ctx.fillRect(cx + 8, cy - 8 + dy, 22, 3);
+        [-12, -4, 4, 12, 20].forEach(function (dy) {
+          ctx.fillRect(-32, dy + 12, 24 - (dy % 8), 2.5);
         });
+        [-16, -8, 0, 8, 16, 24].forEach(function (dy) {
+          ctx.fillRect(6, dy - 10, 26 - (dy % 10), 2.5);
+        });
+        ctx.restore();
       },
     },
     {
       text: "You dreamt the cashier gave you free food forever.",
       draw: function (cx, cy) {
-        ctx.fillStyle = "#e0a63a";
+        groundShadow(cx + 2, cy + 26, 30, 6);
+        ctx.fillStyle = shade("#e0a63a", -0.15);
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 13, 27, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        var bunGrad = ctx.createRadialGradient(cx - 6, cy - 20, 2, cx, cy - 16, 28);
+        bunGrad.addColorStop(0, "#f2cc8f");
+        bunGrad.addColorStop(1, "#d9a865");
+        ctx.fillStyle = bunGrad;
         ctx.beginPath();
         ctx.arc(cx, cy - 14, 26, Math.PI, 0);
         ctx.fill();
+        ctx.fillStyle = "#fff6d9";
+        [-14, -3, 8, 18].forEach(function (dx) {
+          ctx.beginPath();
+          ctx.ellipse(cx + dx, cy - 24, 2, 1.3, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.fillStyle = "#f2d03c";
+        ctx.beginPath();
+        ctx.moveTo(cx - 27, cy - 3);
+        ctx.lineTo(cx + 27, cy - 3);
+        ctx.lineTo(cx + 22, cy + 5);
+        ctx.lineTo(cx - 22, cy + 5);
+        ctx.closePath();
+        ctx.fill();
+
         ctx.fillStyle = "#6b9e4a";
-        ctx.fillRect(cx - 26, cy - 6, 52, 7);
-        ctx.fillStyle = "#8a5a34";
-        ctx.fillRect(cx - 26, cy, 52, 8);
-        ctx.fillStyle = "#e0a63a";
-        ctx.fillRect(cx - 26, cy + 10, 52, 10);
+        ctx.beginPath();
+        ctx.moveTo(cx - 27, cy + 3);
+        for (var lx = -27; lx <= 27; lx += 6) {
+          ctx.lineTo(lx + cx, cy + (lx % 12 === 0 ? 0 : 7));
+        }
+        ctx.lineTo(cx + 27, cy + 9);
+        ctx.lineTo(cx - 27, cy + 9);
+        ctx.closePath();
+        ctx.fill();
+
+        var pattyGrad = ctx.createLinearGradient(0, cy + 9, 0, cy + 18);
+        pattyGrad.addColorStop(0, shade("#6b4530", 0.1));
+        pattyGrad.addColorStop(1, shade("#6b4530", -0.2));
+        ctx.fillStyle = pattyGrad;
+        ctx.fillRect(cx - 26, cy + 9, 52, 9);
+        ctx.fillStyle = "#e0433a";
+        [-16, 0, 16].forEach(function (dx) {
+          ctx.beginPath();
+          ctx.arc(cx + dx, cy + 13, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        var bottomGrad = ctx.createLinearGradient(0, cy + 18, 0, cy + 28);
+        bottomGrad.addColorStop(0, "#e0a63a");
+        bottomGrad.addColorStop(1, shade("#e0a63a", -0.25));
+        ctx.fillStyle = bottomGrad;
+        ctx.fillRect(cx - 24, cy + 18, 48, 10);
       },
     },
     {
@@ -904,113 +1072,384 @@
         ctx.translate(-cx, -cy);
         drawCar(cx, cy, "up");
         ctx.restore();
+
+        ctx.strokeStyle = "#fff6c8";
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, 50, -2.6, -0.6);
+        ctx.stroke();
+        var arrowX = cx + 50 * Math.cos(-0.6),
+          arrowY = cy + 50 * Math.sin(-0.6);
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(arrowX, arrowY);
+        ctx.lineTo(arrowX - 8, arrowY - 4);
+        ctx.moveTo(arrowX, arrowY);
+        ctx.lineTo(arrowX - 2, arrowY - 9);
+        ctx.stroke();
+
+        drawSparkles(cx, cy, [
+          [-44, -36, 6],
+          [42, -30, 5],
+          [-38, 34, 5],
+          [44, 28, 6],
+          [0, -48, 4],
+        ]);
       },
     },
     {
       text: "You dreamt the whole town was made of cake.",
       draw: function (cx, cy) {
-        ctx.fillStyle = "#9d6b4a";
-        ctx.fillRect(cx - 34, cy + 6, 68, 20);
-        ctx.fillStyle = "#e9a9c2";
-        ctx.fillRect(cx - 28, cy - 12, 56, 18);
+        groundShadow(cx + 2, cy + 34, 36, 6);
+        var baseGrad = ctx.createLinearGradient(0, cy + 10, 0, cy + 28);
+        baseGrad.addColorStop(0, "#b07d55");
+        baseGrad.addColorStop(1, shade("#9d6b4a", -0.2));
+        ctx.fillStyle = baseGrad;
+        ctx.fillRect(cx - 38, cy + 10, 76, 20);
         ctx.fillStyle = "#fff";
-        ctx.fillRect(cx - 28, cy - 14, 56, 4);
-        ctx.fillStyle = "#e0433a";
+        for (var dx1 = -34; dx1 <= 34; dx1 += 8) {
+          ctx.beginPath();
+          ctx.arc(cx + dx1, cy + 10, 4, 0, Math.PI, true);
+          ctx.fill();
+        }
+
+        var midGrad = ctx.createLinearGradient(0, cy - 6, 0, cy + 10);
+        midGrad.addColorStop(0, "#f2bcd2");
+        midGrad.addColorStop(1, shade("#e9a9c2", -0.15));
+        ctx.fillStyle = midGrad;
+        ctx.fillRect(cx - 28, cy - 6, 56, 16);
+        ctx.fillStyle = "#fff";
+        for (var dx2 = -24; dx2 <= 24; dx2 += 7) {
+          ctx.beginPath();
+          ctx.arc(cx + dx2, cy - 6, 3.5, 0, Math.PI, true);
+          ctx.fill();
+        }
+
+        var topGrad = ctx.createLinearGradient(0, cy - 18, 0, cy - 6);
+        topGrad.addColorStop(0, "#fff");
+        topGrad.addColorStop(1, "#f2ead8");
+        ctx.fillStyle = topGrad;
+        ctx.fillRect(cx - 18, cy - 18, 36, 12);
+        ctx.fillStyle = "#fff";
+        for (var dx3 = -14; dx3 <= 14; dx3 += 6) {
+          ctx.beginPath();
+          ctx.arc(cx + dx3, cy - 18, 3, 0, Math.PI, true);
+          ctx.fill();
+        }
+
+        ["#e0433a", "#3aa76d", "#f2cc8f", "#3767d6"].forEach(function (col, i) {
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.arc(cx - 30 + i * 18, cy + 2, 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(cx - 24 + i * 15, cy + 18, 2, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.fillStyle = "#f2cc8f";
+        ctx.fillRect(cx - 2, cy - 30, 4, 12);
+        ctx.fillStyle = "#ff9a3c";
         ctx.beginPath();
-        ctx.arc(cx, cy - 20, 6, 0, Math.PI * 2);
+        ctx.moveTo(cx, cy - 36);
+        ctx.quadraticCurveTo(cx + 4, cy - 31, cx, cy - 27);
+        ctx.quadraticCurveTo(cx - 4, cy - 31, cx, cy - 36);
         ctx.fill();
       },
     },
     {
       text: "You dreamt you could talk to the squirrels.",
       draw: function (cx, cy) {
+        groundShadow(cx + 4, cy + 20, 26, 6);
+
+        ctx.fillStyle = "#c98a4a";
+        ctx.beginPath();
+        ctx.ellipse(cx - 20, cy + 10, 5, 7, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx - 8, cy + 10, 4, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        var tailGrad = ctx.createRadialGradient(cx + 18, cy - 14, 2, cx + 20, cy - 8, 22);
+        tailGrad.addColorStop(0, shade("#9d7049", 0.2));
+        tailGrad.addColorStop(1, shade("#9d7049", -0.15));
+        ctx.fillStyle = tailGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx + 20, cy - 8, 20, 15, -0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = shade("#9d7049", -0.35);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + 2, cy + 2);
+        ctx.quadraticCurveTo(cx + 20, cy - 20, cx + 36, cy - 8);
+        ctx.stroke();
+
+        var bodyGrad = ctx.createRadialGradient(cx - 14, cy, 2, cx - 6, cy + 4, 18);
+        bodyGrad.addColorStop(0, shade("#9d7049", 0.15));
+        bodyGrad.addColorStop(1, "#9d7049");
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx - 8, cy + 6, 16, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#f2e2c8";
+        ctx.beginPath();
+        ctx.ellipse(cx - 10, cy + 10, 9, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.fillStyle = "#9d7049";
         ctx.beginPath();
-        ctx.ellipse(cx + 20, cy - 10, 20, 14, -0.6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(cx - 8, cy + 6, 16, 11, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
         ctx.moveTo(cx - 18, cy + 4);
-        ctx.lineTo(cx - 12, cy - 6);
+        ctx.lineTo(cx - 12, cy - 8);
         ctx.lineTo(cx - 20, cy - 6);
         ctx.closePath();
         ctx.fill();
+        ctx.fillStyle = "#f2e2c8";
+        ctx.beginPath();
+        ctx.moveTo(cx - 17, cy + 1);
+        ctx.lineTo(cx - 14, cy - 5);
+        ctx.lineTo(cx - 18, cy - 4);
+        ctx.closePath();
+        ctx.fill();
+
         ctx.fillStyle = "#2b2b2b";
         ctx.beginPath();
-        ctx.arc(cx - 15, cy + 3, 1.5, 0, Math.PI * 2);
+        ctx.arc(cx - 16, cy + 3, 1.6, 0, Math.PI * 2);
         ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(cx - 16.5, cy + 2.5, 0.6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#8a5a34";
+        ctx.beginPath();
+        ctx.arc(cx + 2, cy + 24, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#6b4530";
+        ctx.fillRect(cx, cy + 18, 4, 4);
       },
     },
     {
       text: "You dreamt your bed turned into a hot air balloon.",
       draw: function (cx, cy) {
-        var grad = ctx.createRadialGradient(cx - 6, cy - 16, 4, cx, cy - 10, 28);
-        grad.addColorStop(0, "#f2cc8f");
-        grad.addColorStop(1, "#e0433a");
-        ctx.fillStyle = grad;
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
         ctx.beginPath();
-        ctx.ellipse(cx, cy - 10, 26, 30, 0, 0, Math.PI * 2);
+        ctx.arc(cx - 36, cy - 20, 9, 0, Math.PI * 2);
+        ctx.arc(cx - 28, cy - 24, 7, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath();
+        ctx.arc(cx + 34, cy + 2, 7, 0, Math.PI * 2);
+        ctx.arc(cx + 27, cy - 2, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 40);
+        ctx.bezierCurveTo(cx + 28, cy - 38, cx + 28, cy, cx + 14, cy + 16);
+        ctx.quadraticCurveTo(cx, cy + 24, cx - 14, cy + 16);
+        ctx.bezierCurveTo(cx - 28, cy, cx - 28, cy - 38, cx, cy - 40);
+        ctx.closePath();
+        var bGrad = ctx.createLinearGradient(cx - 26, 0, cx + 26, 0);
+        bGrad.addColorStop(0, shade("#e0433a", -0.1));
+        bGrad.addColorStop(0.5, "#f2cc8f");
+        bGrad.addColorStop(1, shade("#e0433a", -0.1));
+        ctx.fillStyle = bGrad;
+        ctx.fill();
+
+        ctx.save();
+        ctx.clip();
+        ["#e0433a", "#f2cc8f", "#3767d6", "#f2cc8f", "#e0433a", "#f2cc8f"].forEach(
+          function (col, i) {
+            ctx.fillStyle = col;
+            ctx.fillRect(cx - 28 + i * 10, cy - 42, 9, 62);
+          }
+        );
+        ctx.restore();
+
+        ctx.strokeStyle = "rgba(0,0,0,0.25)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 40);
+        ctx.bezierCurveTo(cx + 28, cy - 38, cx + 28, cy, cx + 14, cy + 16);
+        ctx.quadraticCurveTo(cx, cy + 24, cx - 14, cy + 16);
+        ctx.bezierCurveTo(cx - 28, cy, cx - 28, cy - 38, cx, cy - 40);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(cx - 14, cy + 14);
-        ctx.lineTo(cx - 8, cy + 26);
-        ctx.moveTo(cx + 14, cy + 14);
-        ctx.lineTo(cx + 8, cy + 26);
+        ctx.moveTo(cx - 12, cy + 18);
+        ctx.lineTo(cx - 9, cy + 32);
+        ctx.moveTo(cx + 12, cy + 18);
+        ctx.lineTo(cx + 9, cy + 32);
         ctx.stroke();
-        ctx.fillStyle = "#8a5a34";
-        ctx.fillRect(cx - 10, cy + 26, 20, 12);
-      },
-    },
-    {
-      text: "You dreamt you delivered newspapers to the moon.",
-      draw: function (cx, cy) {
-        ctx.fillStyle = "#f2e9b8";
-        ctx.beginPath();
-        ctx.arc(cx + 10, cy - 8, 26, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "rgba(0,0,0,0.35)";
-        ctx.beginPath();
-        ctx.arc(cx + 22, cy - 8, 22, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#f2ead8";
-        ctx.fillRect(cx - 34, cy + 14, 30, 22);
+
+        var basketGrad = ctx.createLinearGradient(0, cy + 32, 0, cy + 44);
+        basketGrad.addColorStop(0, "#a9784f");
+        basketGrad.addColorStop(1, shade("#8a5a34", -0.2));
+        ctx.fillStyle = basketGrad;
+        ctx.fillRect(cx - 11, cy + 32, 22, 12);
         ctx.strokeStyle = "rgba(0,0,0,0.3)";
         ctx.lineWidth = 1;
-        [20, 26, 32].forEach(function (dy) {
+        [cy + 35, cy + 39].forEach(function (ly) {
           ctx.beginPath();
-          ctx.moveTo(cx - 30, cy + dy);
-          ctx.lineTo(cx - 8, cy + dy);
+          ctx.moveTo(cx - 11, ly);
+          ctx.lineTo(cx + 11, ly);
           ctx.stroke();
         });
       },
     },
     {
+      text: "You dreamt you delivered newspapers to the moon.",
+      draw: function (cx, cy) {
+        drawSparkles(cx, cy, [
+          [-44, -32, 4],
+          [-38, 14, 3],
+          [40, 30, 4],
+          [-10, -38, 3],
+        ]);
+        ctx.fillStyle = "#3767d6";
+        ctx.beginPath();
+        ctx.arc(cx - 40, cy - 28, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#3aa76d";
+        ctx.beginPath();
+        ctx.arc(cx - 43, cy - 31, 2.8, 0, Math.PI * 2);
+        ctx.arc(cx - 37, cy - 26, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        var moonGrad = ctx.createRadialGradient(cx + 2, cy - 18, 2, cx + 10, cy - 10, 28);
+        moonGrad.addColorStop(0, "#fff8db");
+        moonGrad.addColorStop(1, "#d9c98a");
+        ctx.fillStyle = moonGrad;
+        ctx.beginPath();
+        ctx.arc(cx + 10, cy - 10, 26, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(0,0,0,0.38)";
+        ctx.beginPath();
+        ctx.arc(cx + 22, cy - 10, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(160,145,90,0.5)";
+        ctx.beginPath();
+        ctx.arc(cx - 2, cy - 18, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx - 6, cy - 4, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 2, cy + 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(cx - 28, cy + 26);
+        ctx.rotate(-0.15);
+        groundShadow(0, 24, 18, 4);
+        ctx.fillStyle = "#f2ead8";
+        ctx.fillRect(-17, -12, 32, 24);
+        ctx.strokeStyle = "rgba(0,0,0,0.25)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-17, -12, 32, 24);
+        ctx.fillStyle = "#8a8070";
+        ctx.fillRect(-13, -8, 16, 4);
+        [-1, 4, 9].forEach(function (dy) {
+          ctx.fillRect(-13, dy, 24, 2);
+        });
+        ctx.restore();
+      },
+    },
+    {
       text: "You dreamt the diner stools came alive and danced.",
       draw: function (cx, cy) {
-        drawStool(cx - 28, cy + 14);
-        drawStool(cx, cy - 10);
-        drawStool(cx + 28, cy + 14);
+        ctx.fillStyle = "#f2d03c";
+        [
+          [-34, -34, 6],
+          [34, -30, 7],
+          [0, -42, 5],
+        ].forEach(function (n) {
+          ctx.beginPath();
+          ctx.arc(cx + n[0], cy + n[1], n[2] * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillRect(cx + n[0] + n[2] * 0.42, cy + n[1] - n[2] * 1.8, 2, n[2] * 1.8);
+        });
+
+        [
+          [-30, 14, -0.18],
+          [0, -6, 0.1],
+          [30, 14, -0.1],
+        ].forEach(function (s) {
+          ctx.save();
+          ctx.translate(cx + s[0], cy + s[1]);
+          ctx.rotate(s[2]);
+          ctx.strokeStyle = "rgba(255,255,255,0.45)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([3, 4]);
+          ctx.beginPath();
+          ctx.arc(0, 4, 16, 0.3, 2.8);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.translate(-cx - s[0], -cy - s[1]);
+          drawStool(cx + s[0], cy + s[1]);
+          ctx.restore();
+        });
       },
     },
     {
       text: "You dreamt you were as tall as the school building.",
       draw: function (cx, cy) {
-        ctx.fillStyle = "#c96b5a";
-        ctx.fillRect(cx - 42, cy, 34, 30);
+        groundShadow(cx - 18, cy + 32, 24, 5);
+        groundShadow(cx + 20, cy + 32, 10, 4);
+
+        var wallGrad = ctx.createLinearGradient(cx - 44, 0, cx - 6, 0);
+        wallGrad.addColorStop(0, shade("#c96b5a", -0.15));
+        wallGrad.addColorStop(1, shade("#c96b5a", 0.08));
+        ctx.fillStyle = wallGrad;
+        ctx.fillRect(cx - 44, cy, 38, 32);
+        ctx.fillStyle = shade("#6b4a36", 0.1);
+        ctx.beginPath();
+        ctx.moveTo(cx - 48, cy);
+        ctx.lineTo(cx - 25, cy - 12);
+        ctx.lineTo(cx - 2, cy);
+        ctx.closePath();
+        ctx.fill();
         ctx.fillStyle = "#8fc7ea";
-        ctx.fillRect(cx - 35, cy + 8, 8, 8);
+        ctx.fillRect(cx - 38, cy + 8, 8, 8);
+        ctx.fillRect(cx - 24, cy + 8, 8, 8);
+        ctx.strokeStyle = "rgba(255,255,255,0.6)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(cx - 38, cy + 8, 8, 8);
+        ctx.strokeRect(cx - 24, cy + 8, 8, 8);
+        ctx.fillStyle = "#3a2a1f";
+        ctx.fillRect(cx - 16, cy + 18, 8, 14);
+
         ctx.fillStyle = "#f2c29c";
         ctx.beginPath();
-        ctx.arc(cx + 14, cy - 24, 7, 0, Math.PI * 2);
+        ctx.arc(cx + 16, cy - 30, 8, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = "#3aa76d";
-        ctx.fillRect(cx + 5, cy - 16, 18, 34);
+        ctx.fillStyle = "#4a3524";
+        ctx.beginPath();
+        ctx.arc(cx + 16, cy - 34, 8, Math.PI, 0);
+        ctx.fill();
+
+        var shirtGrad = ctx.createLinearGradient(cx + 2, 0, cx + 30, 0);
+        shirtGrad.addColorStop(0, shade("#3aa76d", -0.2));
+        shirtGrad.addColorStop(0.5, "#3aa76d");
+        shirtGrad.addColorStop(1, shade("#3aa76d", 0.15));
+        ctx.fillStyle = shirtGrad;
+        ctx.fillRect(cx + 2, cy - 21, 28, 30);
+
+        ctx.strokeStyle = "#f2c29c";
+        ctx.lineWidth = 6;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(cx + 4, cy - 18);
+        ctx.lineTo(cx - 12, cy - 34);
+        ctx.moveTo(cx + 28, cy - 18);
+        ctx.lineTo(cx + 40, cy - 2);
+        ctx.stroke();
+        ctx.lineCap = "butt";
+
         ctx.fillStyle = "#2f3e6b";
-        ctx.fillRect(cx + 5, cy + 10, 18, 10);
+        ctx.fillRect(cx + 2, cy + 9, 28, 14);
       },
     },
   ];
