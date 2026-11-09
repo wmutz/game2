@@ -39,7 +39,7 @@ html, body {
 #joystick-base {
   position: absolute;
   left: max(24px, env(safe-area-inset-left, 0px));
-  bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  bottom: max(90px, env(safe-area-inset-bottom, 0px) + 90px);
   width: 120px;
   height: 120px;
   border-radius: 50%;
