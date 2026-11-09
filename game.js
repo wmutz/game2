@@ -203,11 +203,14 @@
     if (!activeCashier) return;
     var html = "";
     for (var i = 0; i < activeCashier.menu.length; i++) {
+      var item = activeCashier.menu[i];
       html +=
         '<div class="menu-row"><span>' +
-        activeCashier.menu[i] +
-        '</span><button class="order-btn" data-item="' +
-        activeCashier.menu[i] +
+        item.name +
+        '</span><span class="menu-price">$' +
+        item.price +
+        '</span><button class="order-btn" data-index="' +
+        i +
         '">' +
         (i + 1) +
         "</button></div>";
@@ -235,9 +238,15 @@
     if (e.target === menuCloseBtn) {
       closeMenu();
     } else if (e.target.classList.contains("order-btn") && !pendingOrder) {
-      var item = e.target.getAttribute("data-item");
-      pendingOrder = { item: item, timer: ORDER_WAIT_SECONDS };
-      orderMessage = "Getting " + item + " ready...";
+      var item = activeCashier.menu[parseInt(e.target.getAttribute("data-index"), 10)];
+      if (money < item.price) {
+        orderMessage = "Not enough money for " + item.name + "!";
+        orderMessageTimer = 3;
+        return;
+      }
+      money -= item.price;
+      pendingOrder = { item: item.name, timer: ORDER_WAIT_SECONDS };
+      orderMessage = "Getting " + item.name + " ready...";
       closeMenu();
     }
   });
@@ -605,21 +614,21 @@
   var dinerCashier = makeNpc({ x: 150, y: 50, w: 350, h: 20 }, 1, 35);
   dinerCashier.place = "Diner";
   dinerCashier.menu = [
-    "a cheeseburger",
-    "a plate of fries",
-    "a chocolate milkshake",
-    "a slice of pie",
-    "a stack of pancakes",
+    { name: "a cheeseburger", price: 6 },
+    { name: "a plate of fries", price: 3 },
+    { name: "a chocolate milkshake", price: 4 },
+    { name: "a slice of pie", price: 4 },
+    { name: "a stack of pancakes", price: 5 },
   ];
 
   var cafeCashier = makeNpc({ x: 630, y: 50, w: 220, h: 20 }, 4, 35);
   cafeCashier.place = "Cafe";
   cafeCashier.menu = [
-    "a latte",
-    "a cappuccino",
-    "a croissant",
-    "a slice of cake",
-    "a hot chocolate",
+    { name: "a latte", price: 4 },
+    { name: "a cappuccino", price: 4 },
+    { name: "a croissant", price: 3 },
+    { name: "a slice of cake", price: 5 },
+    { name: "a hot chocolate", price: 3 },
   ];
 
   scenes.diner = {
@@ -812,6 +821,20 @@
   var sleepTimer = 0;
   var sleepFade = 0;
   var sleepJumped = false;
+  var dreamText = "";
+
+  var DREAM_TEXTS = [
+    "You dreamt you could fly over the whole town.",
+    "You dreamt you turned into a giant newspaper.",
+    "You dreamt the cashier gave you free food forever.",
+    "You dreamt you were driving the car... upside down.",
+    "You dreamt the whole town was made of cake.",
+    "You dreamt you could talk to the squirrels.",
+    "You dreamt your bed turned into a hot air balloon.",
+    "You dreamt you delivered newspapers to the moon.",
+    "You dreamt the diner stools came alive and danced.",
+    "You dreamt you were as tall as the school building.",
+  ];
 
   var sitting = false;
 
@@ -837,8 +860,8 @@
   function updateSleepFade(dt) {
     sleepTimer += dt;
     var t1 = 0.5,
-      t2 = 0.9,
-      t3 = 1.4;
+      t2 = 3.2,
+      t3 = 3.7;
     if (sleepTimer < t1) {
       sleepFade = sleepTimer / t1;
     } else if (sleepTimer < t2) {
@@ -1117,6 +1140,7 @@
             sleepTimer = 0;
             sleepFade = 0;
             sleepJumped = false;
+            dreamText = DREAM_TEXTS[Math.floor(Math.random() * DREAM_TEXTS.length)];
             hidePrompt();
           }
         }
@@ -1839,9 +1863,13 @@
       ctx.fillRect(0, 0, VIEW_W, VIEW_H);
       if (sleepFade > 0.6) {
         ctx.fillStyle = "rgba(255,255,255,0.85)";
-        ctx.font = "bold 22px sans-serif";
+        ctx.font = "bold 26px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("Zzz...", VIEW_W / 2, VIEW_H / 2);
+        ctx.fillText("Zzz...", VIEW_W / 2, VIEW_H / 2 - 20);
+        if (dreamText) {
+          ctx.font = "bold 18px sans-serif";
+          ctx.fillText(dreamText, VIEW_W / 2, VIEW_H / 2 + 20);
+        }
         ctx.textAlign = "left";
       }
     }

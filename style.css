@@ -223,8 +223,12 @@ html, body {
   padding: 4px 0;
 }
 
-#menu-list .menu-row span {
+#menu-list .menu-row span:first-child {
   flex: 1;
+}
+
+#menu-list .menu-row span.menu-price {
+  opacity: 0.85;
 }
 
 #menu-list .order-btn {
